@@ -7,10 +7,17 @@
  * It reads what the audio already leaves for the UI: the scope buffers (audio.c, the mix at 22 kHz, left and
  * right, as if MASTER were all the way up: the picture does not follow the volume knob, even at 0), the tracks' peaks (fx.c / drums.c, as the TRACKS meters read them), the notes that started
  * (voice.c vis_hit) and the transport clock. Everything is drawn in the main loop, every other frame, in two
- * bands of 120 rows (the canvas holds 124): no cost to the audio. */
-#define VIS_N 12u
+ * bands of 120 rows (the canvas holds 124), preemptible by the audio IRQ. */
+#define VIS_N (FELUCCA_DINO ? 15u : 12u)
 static const char *const VIS_NAME[VIS_N] = {"OSCILLOSCOPE", "SPECTRUM", "SPECTROGRAM", "LISSAJOUS", "VU METERS",
-                                            "CIRCLE", "TAPE", "LCD", "BOUNCE", "ORBIT", "WIRES", "SLOOP"};
+                                            "CIRCLE", "TAPE", "LCD", "BOUNCE", "ORBIT", "WIRES", "SLOOP"
+#if FELUCCA_DINO
+                                            , "COSMIC DOG", "HALO", "NEBULA"
+#endif
+};
+#if FELUCCA_DINO
+static uint32_t vis_draw_ms, vis_name_until;
+#endif
 /* vis_on, vis_shown_last, vis_name_t: ui_draw.c; vis_style: panel.c (kept with the settings) */
 #define VIS_FFT 512u
 #define VIS_SG_W 48u                                /* spectrogram: 48 columns of 5 px, 72 rows of 3 px */
@@ -43,6 +50,9 @@ static void vis_open(void)
 {
     vis_on = 1;
     vis_name_t = 30;
+#if FELUCCA_DINO
+    vis_name_until = fm1_ms + 1000u;
+#endif
     ui.force = 1;
 }
 static int32_t isin(uint32_t a) { return SINE[a & 1023u]; }          /* a: 1024 a turn; Q15 */
@@ -206,6 +216,10 @@ static void vis_bands(int16_t *out)
     }
 }
 
+#if FELUCCA_DINO
+#include "cosmic_dog.h"
+#endif
+
 static void vis_update(void)
 {
     uint32_t i, w, hit, now = fm1_ms;
@@ -335,6 +349,9 @@ static void vis_update(void)
     default:
         break;
     }
+#if FELUCCA_DINO
+    cosmic_update(now, hit);
+#endif
 }
 
 /* ---- the styles (each draws the whole screen; called once per band) ---- */
@@ -605,10 +622,20 @@ static void vis_draw(void)
     uint32_t pass;
     if (!vis_shown_last || ui.force) {
         vis_shown_last = 1;
+#if !FELUCCA_DINO
         lcd_fill(0, 0, 240, 240, C_BLACK);
-    } else if (ui.frame & 1u) {
+#endif
+    }
+#if FELUCCA_DINO
+    else if (fm1_ms - vis_draw_ms < (song.cpu_q8 >= 192u ? 200u : 100u)) {
+#else
+    else if (ui.frame & 1u) {
+#endif
         return;
     }
+#if FELUCCA_DINO
+    vis_draw_ms = fm1_ms;
+#endif
     vis_update();
     for (pass = 0; pass < 2u; pass++) {
         cv_begin(240, 120, C_BLACK);
@@ -625,16 +652,25 @@ static void vis_draw(void)
         case 8: vis_bounce(); break;
         case 9: vis_orbit(); break;
         case 10: vis_wires(); break;
+#if FELUCCA_DINO
+        case 12: case 13: case 14: cosmic_draw(vis_style - 12u); break;
+#endif
         default: vis_sloop(); break;
         }
-        if (!pass && (vis_name_t || ui.msg_t)) {    /* the style's name a second (or a message) */
+        if (!pass && (
+#if FELUCCA_DINO
+            (int32_t)(vis_name_until - fm1_ms) > 0 ||
+#else
+            vis_name_t ||
+#endif
+            ui.msg_t)) {    /* the style's name a second (or a message) */
             char n[8];
             const char *s = ui.msg_t ? ui.msg : VIS_NAME[vis_style % VIS_N];
             cv_rect(0, 0, 240, 20, C_BLACK);
             cv_text(120 - text_w(&FONT_S, s) / 2, 2, &FONT_S, s, C_WHITE);
             if (!ui.msg_t) {
                 fmt_int(n, (int32_t)(vis_style % VIS_N) + 1);
-                str_cpy(n + str_len(n), "/12", 4);
+                str_cpy(n + str_len(n), FELUCCA_DINO ? "/15" : "/12", 4);
                 cv_text(4, 2, &FONT_S, n, C_DIM);
             }
         }
@@ -647,8 +683,15 @@ static void vis_draw(void)
 /* SELECT on the visualiser: the next / previous style (round) */
 static void vis_select(int32_t s)
 {
+#if FELUCCA_DINO
+    vis_style = (uint8_t)(((int32_t)vis_style + s % (int32_t)VIS_N + (int32_t)VIS_N) % (int32_t)VIS_N);
+#else
     vis_style = (uint8_t)((vis_style + (s > 0 ? 1u : VIS_N - 1u)) % VIS_N);
+#endif
     vis_name_t = 30;
+#if FELUCCA_DINO
+    vis_name_until = fm1_ms + 1000u;
+#endif
     ui.force = 1;
     settings_later = 1;                                 /* (kept with the settings, once stopped) */
 }

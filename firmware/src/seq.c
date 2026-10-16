@@ -1487,6 +1487,11 @@ static void kh_release(track_t *t)                  /* every held note ends */
 }
 static void input_on(track_t *t, uint32_t note, uint32_t vel)
 {
+#if FELUCCA_DINO
+    sus_wait[trk_index(t)][note >> 5] &= ~(1u << (note & 31u));
+    trk_note_on(t, note, vel);
+    return;
+#endif
     if (is_drum(t)) {                             /* (a GM note on the drum track: its lane) */
         drum_input(midi_drum_lane(note), vel_lvl(vel), 0, 1);
         return;
@@ -1528,6 +1533,11 @@ static void input_on(track_t *t, uint32_t note, uint32_t vel)
 
 static void input_off(track_t *t, uint32_t note)
 {
+#if FELUCCA_DINO
+    if (sus_on[trk_index(t)]) sus_wait[trk_index(t)][note >> 5] |= 1u << (note & 31u);
+    else trk_note_off(t, note);
+    return;
+#endif
     if (is_drum(t)) {
         if (ft_on && ft_trk == TRK_DRUM)
             ft_note_off(midi_drum_lane(note));
@@ -1546,6 +1556,10 @@ static void input_off(track_t *t, uint32_t note)
 }
 static void input_off_now(track_t *t, uint32_t note)
 {
+#if FELUCCA_DINO
+    trk_note_off(t, note);
+    return;
+#endif
     if (ft_on && t == &trk[ft_trk % NTRK])
         ft_note_off(note);
     rec_release(t, note);
@@ -2823,6 +2837,10 @@ static void clkout_block(uint32_t n)
  * track at the clock, the click, the rolls and the arps; then the clock moves on by n samples */
 static void events_block(uint32_t n)
 {
+#if FELUCCA_DINO
+    dino_events_block(n);
+    return;
+#endif
     uint32_t i, pr, adv;
     if (mo_any && !song.g[G_MIDI]) {            /* MIDI = KEYS again: end what the sequencer had sent */
         seq_out_all_off();
@@ -3097,3 +3115,7 @@ static void events_block(uint32_t n)
 #endif
     }
 }
+
+#if FELUCCA_DINO
+#include "dino_live.c"
+#endif

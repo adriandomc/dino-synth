@@ -783,6 +783,9 @@ static uint32_t track_render(track_t *t, int32_t *out, uint32_t n)
         {   /* the pitch in 1/4096 semitone: glide, LFO, the pitch envelope; the fraction goes into the increment */
             int32_t q = (v->pitch_cur << 8) + v->pitch_frac + ((lfo * p[P_LD_PIT] * 3) >> 7) +
                         ((v->penv * p[P_ED_PIT] * 3) >> 7) + bendq;
+#if FELUCCA_DINO
+            q += dino.vibrato;
+#endif
             pitch = (q >> 8) + tune;
             m.pitch16 = clamp(pitch, 0, 2047);
             m.inc = pitch_inc(m.pitch16);

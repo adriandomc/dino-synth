@@ -242,6 +242,9 @@ UI_SMALL static void up_slot_label(char *b, uint32_t k)  /* "U07" */
  * 1 = the drum track is selected (it has no sound to store) */
 UI_SMALL static int up_store(uint32_t k, const char *name)
 {
+#if FELUCCA_DINO
+    return (int)dino_patch_named(k, name);
+#else
     up_rec_t r;
     uint32_t i;
     if (is_drum(TSEL))
@@ -267,6 +270,7 @@ UI_SMALL static int up_store(uint32_t k, const char *name)
         r.p[i] = TSEL->p[i];
     up_pat_from(&r, TSEL->step);
     return up_put(k, &r);
+#endif
 }
 
 /* slot k -> the selected part's sound: engine and every parameter except its mix (LEVEL,
@@ -282,6 +286,7 @@ UI_SMALL static int up_load_to(track_t *t, uint32_t k)       /* user preset k in
         return 1;
     r = up_rec(k);
     up_values(r, v);
+#if !FELUCCA_DINO
     for (i = 0; i < P_COUNT; i++)                       /* (LEN etc. of a kept pattern changed too, and */
         if (param_kept(i) || (t->p[P_AMODE] && i >= P_AMODE && i <= P_AORDER) ||   /* a preset pattern then counted as */
             (i == P_AHOLD && !t->p[P_AMODE] && t->p[P_AHOLD]))   /* (2.7: KBD HOLD stays on) */
@@ -289,8 +294,11 @@ UI_SMALL static int up_load_to(track_t *t, uint32_t k)       /* user preset k in
     if (!v[P_AMODE] && !t->p[P_AMODE])
         v[P_AHOLD] = t->p[P_AHOLD];                     /* (2.7) KBD HOLD (HOLD with the arp OFF) is the track's, not the
                                                          * preset's: as it was (a 2.6 preset's HOLD meant nothing there) */
+#else
+    v[P_AMODE] = v[P_AHOLD] = v[P_QUANT] = v[P_CHORD] = v[P_STRUM] = v[P_VLEAD] = 0;
+#endif
     sound_change(t);                                    /* (2.6: what sounds fades out with the old sound, no click) */
-    if (t->p[P_AMODE])
+    if (!FELUCCA_DINO && t->p[P_AMODE])
         arp_keep_req |= (uint8_t)(1u << trk_index(t));  /* (2.7: its notes too) */
     panic_req |= (uint8_t)(1u << trk_index(t));
     fm1_irq_off();                                      /* the audio ISR must not see half a sound */

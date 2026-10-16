@@ -1,6 +1,14 @@
 /* SPDX-License-Identifier: GPL-3.0-only
  * Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments */
 /* SLOOP (based on FELUCCA): one compilation unit (the HAL is header-only). Order matters. */
+#ifndef FELUCCA_DINO
+#define FELUCCA_DINO 1
+#endif
+#if FELUCCA_DINO
+#ifndef FELUCCA_VERSION
+#define FELUCCA_VERSION "DINO SYNTH 0.1"
+#endif
+#endif
 #include <stdint.h>
 #include "fm1_time.h"
 #include "fm1_sys.h"
@@ -18,6 +26,9 @@
 #include "lcd.c"
 #include "gfx.c"
 #include "core.h"
+#if FELUCCA_DINO
+#include "dino.h"
+#endif
 #include "cpu1.h"           /* the second core's job API (defined in cpu1.c; the host tests have their own) */
 #include "engines.c"
 #include "drums.c"
@@ -54,7 +65,7 @@
 #if FELUCCA_UART
 #include "midi_uart.c"
 #endif
-#define FELUCCA_ARRANGER 1
+#define FELUCCA_ARRANGER (!FELUCCA_DINO)
 #include "arranger.c"
 #include "seq.c"
 #include "audio.c"
@@ -69,6 +80,9 @@
 #include "ui_layers.c"       /* hold a function button: what the keys and knobs do (TE style) */
 #include "ui_menu.c"
 #include "ui_input.c"
+#if FELUCCA_DINO
+#include "ui_dino.c"
+#endif
 #ifndef FELUCCA_FLASH
 #define FELUCCA_FLASH 1          /* flash driver + storage.c */
 #endif
@@ -128,6 +142,9 @@ static int st_prog(uint32_t off, const void *src, uint32_t n)
 #endif
 #include "upreset.c"          /* user presets (read in the XIP window; the host test keeps a RAM mirror) */
 #include "project.c"
+#if FELUCCA_DINO
+#include "dino_store.c"
+#endif
 #if FELUCCA_OTA
 static uint8_t recovery_active;
 #define OTA_IDENTITY (recovery_active ? "FM-1_000" : FELUCCA_ID)

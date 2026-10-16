@@ -516,7 +516,9 @@ UI_SMALL static void drum_screen_input(uint32_t pressed, uint32_t home, uint32_t
         b = k;
         if (b == B_PLAY) {
             if (ft_owns_press()) ;
+#if FELUCCA_ARRANGER
             else if (!song.playing && arrangement_enabled && !arr_valid(&arrangement, arrangement_ready())) ui_message("EMPTY SECTION: REC");
+#endif
             else transport_req = song.playing ? 2 : 1;
         } else if (b == B_SEQ || b == B_EDIT) {
             drum_page = (uint8_t)((drum_page + 1u) % 3u);   /* GRID -> KIT -> SOUND (2.7) */

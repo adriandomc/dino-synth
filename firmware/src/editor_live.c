@@ -24,10 +24,17 @@
 #define ED_LIVE 77u
 UI_SMALL static void ed_live(const uint8_t *a, uint32_t na)
 {
-    uint32_t i, m = 0, s = 0, play;
+    uint32_t i, m = 0, s = 0;
+#if !FELUCCA_DINO
+    uint32_t play;
+#endif
     if (na >= 2u) {
         switch (a[0]) {
         case 1:
+#if FELUCCA_DINO
+            panic_req = (1u << NTRK) - 1u;
+            dino_controllers_reset();
+#else
             play = a[1] == 2u ? !song.playing : a[1];
             if (!play && (song.playing || transport_req))
                 transport_req = 2;
@@ -37,11 +44,14 @@ UI_SMALL static void ed_live(const uint8_t *a, uint32_t na)
                 else
                     transport_req = 1;
             }
+#endif
             break;
+#if !FELUCCA_DINO
         case 2:
             if (na >= 4u && a[1] >= LY_SCALE && a[1] <= LY_SONG && a[2] < 16u)
                 layer_key(a[1], key_of_white(a[2]), a[3] & 1u);
             break;
+#endif
         case 3:
             if (na >= 3u && a[1] < PUNCH_NFX) {
                 fm1_irq_off();
@@ -50,13 +60,18 @@ UI_SMALL static void ed_live(const uint8_t *a, uint32_t na)
             }
             break;
         case 4:
+#if FELUCCA_DINO
+            dino_focus_set(!dino.focus);
+#else
             if (ft_on)
                 transport_req = 1;                   /* a free take (an empty project): REC closes it and the loop
                                                       * plays, as the REC button (seq.c ft_block); PLAY does the same */
             else
                 rec_toggle();
             ui.force = 1;
+#endif
             break;
+#if !FELUCCA_DINO
         case 5:
             ui_message(undo_swap(a[1] & 1u) ? (a[1] & 1u ? "REDO" : "UNDO") : "NOTHING TO UNDO");
             break;
@@ -129,6 +144,7 @@ UI_SMALL static void ed_live(const uint8_t *a, uint32_t na)
                 }
             }
             break;
+#endif
         case 10:
             thr_ed = (uint8_t)(a[1] & 3u);
             break;
@@ -151,6 +167,13 @@ UI_SMALL static void ed_live(const uint8_t *a, uint32_t na)
         m |= (trk[i].p[P_MUTE] != 0) << i;
     }
     ed_b(a[0]);
+#if FELUCCA_DINO
+    ed_b(0); ed_b(0); ed_v(song.g[G_BPM]);
+    ed_b(0); ed_b(0); ed_b(0); ed_b(0); ed_b(m); ed_b(0); ed_b(0); ed_b(song.sel);
+    ed_b((uint32_t)(punch.req + 1));
+    ed_b(clamp((int32_t)((song.cpu_q8 * 100u) >> 8), 0, 127));
+    ed_b(0); ed_b(0); ed_b(0); ed_b(0); ed_b(0);
+#else
     ed_b((song.playing != 0) | (transport_req != 0) << 1 | (arrangement_enabled != 0) << 2 |
          (arrangement_clock.running != 0) << 3 | (fill_now != 0) << 4 | (fill_arm != 0) << 5 | (srec != 0) << 6);
     ed_b((rec_wait != 0) | (undo.valid && !undo.undone) << 1 | (undo.valid && undo.undone) << 2 | (ft_on != 0) << 3);
@@ -170,6 +193,7 @@ UI_SMALL static void ed_live(const uint8_t *a, uint32_t na)
     ed_b(arrangement_clock.bar);
     ed_b(arrangement.entry[arrangement_clock.index % ARR_STEPS].bars);
     ed_b(arrangement_ready() & 15u);
+#endif
     for (i = 0; i < NTRK; i++) {
         int32_t pk = i == TRK_DRUM ? drums.peak : trk[i].peak, lg = 0;
         ed_b(trk[i].seq_idx);

@@ -181,6 +181,10 @@ UI_SMALL static void felucca_init(void)
     song.g[G_RMCH] = midi_set[8];                    /* (2.7) GLO > MIDI 3: REMOTE */                    /* (2.7) GLO > MIDI 3: FX CH */   /* settings of the FM-1) */
     layers_init();                            /* the panel's layer buttons for the keys (ui_layers.c) */
     go_home();
+#if FELUCCA_DINO
+    dino_init_live();
+    dino_store_boot();
+#endif
     ui.force = 1;
 }
 
@@ -339,6 +343,9 @@ UI_SMALL static void fm1_main(void)
         ui_draw();
         felucca_dbg.stage = 8;
         autosave_tick();                                /* the working project into flash, when quiet */
+#if FELUCCA_DINO
+        dino_save_poll();
+#endif
 #if FELUCCA_ARRANGER
         sections_flush();                               /* live sections / the recorded song, when quiet */
 #endif

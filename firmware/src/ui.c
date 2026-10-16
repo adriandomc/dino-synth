@@ -6,7 +6,9 @@
 #define FELUCCA_VERSION "SLOOP 2.7"  /* the beat machine firmware for the FM-1 (based on Felucca) */
 #endif
 static void project_save(uint32_t slot);
+#if FELUCCA_ARRANGER
 static void arrangement_save(void);
+#endif
 static void panel_setup(void);
 static void project_load(uint32_t slot);
 static void project_erase(uint32_t slot);        /* SAVE > PROJECT > ERASE (2.6) */
@@ -419,6 +421,11 @@ UI_SMALL static void apply_preset_to(track_t *t, uint32_t pi)
         }
         preset_extras(t->p, pr);                     /* glide, pitch / LFO modulation, voice mode */
     }
+#if FELUCCA_DINO
+    for (i = P_DIST; i <= P_REV; i++) t->p[i] = 0;
+    t->p[P_ITYPE] = t->p[P_SLCR] = 0;
+    dino_track_direct(t);
+#endif
     fm6_track_loaded(t);                             /* FM6: the preset's patch (its PTCH) */
 }
 
