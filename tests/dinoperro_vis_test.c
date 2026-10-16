@@ -1,12 +1,10 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 /* Real DSP + real LCD renderer; minimal page state keeps this test independent of performance UI controls. */
-#define FELUCCA_DINO 0
 #define main hostsim_main
 #include "hostsim.c"
 #undef main
 #include <assert.h>
-#undef FELUCCA_DINO
-#define FELUCCA_DINO 1
+#define FELUCCA_COSMIC 1
 #define DINO_VIS_TEST 1
 
 static uint16_t screen[240u * 240u];
@@ -77,8 +75,10 @@ static void t_schedule(void)
     fm1_ms = 70; draw(); assert(blits == before + 2u);
     vis_style = 15; vis_select(1); assert(vis_style == 0u);
     vis_select(-1); assert(vis_style == 15u);
-    vis_style = 0; vis_select(12); assert(vis_style == 12u);
-    vis_select(-29); assert(vis_style == 15u);
+    vis_style = 0; vis_select(12); assert(vis_style == 1u);
+    vis_select(-29); assert(vis_style == 0u);
+    ui.frame = 1; ui.force = 0; before = blits; fm1_ms += 1000; draw(); assert(blits == before);
+    ui.frame = 2; draw(); assert(blits == before + 2u);
 }
 static void t_life(void)
 {
@@ -102,7 +102,6 @@ static void t_life(void)
     assert((cosmic_life.cell[0][31] & cosmic_life.cell[0][0] & cosmic_life.cell[0][1]) & 128u);
     /* A/B/drum hits queued between UI frames survive until the next generation. */
     for (uint32_t hit = 1u; hit <= 8u; hit <<= 1u) {
-        if (hit == 2u) continue;
         memset(&cosmic_life, 0, sizeof cosmic_life);
         cosmic_life.ready = 1; cosmic_life.ms = cosmic_life.fed_ms = 1000;
         cosmic.heavy = 0; cosmic.energy = 0; cosmic.note_a = 48; cosmic.note_b = 72;
@@ -123,6 +122,8 @@ static void t_life(void)
     memset(&vs, 0, sizeof vs); memset(&cosmic, 0, sizeof cosmic);
     vs.lvl[2] = 800; cosmic_update(1000, 4); assert(cosmic.energy == 800);
     vs.lvl[3] = 1000; cosmic_update(1100, 8); assert(cosmic.energy == 1000);
+    memset(&cosmic, 0, sizeof cosmic); memset(&vs, 0, sizeof vs);
+    vs.lvl[1] = 900; cosmic_update(1200, 2); assert(cosmic.energy == 900 && cosmic.pulse == 1000);
 }
 static void t_geometry(void)
 {

@@ -39,30 +39,7 @@ UI_SMALL static void panel_init(void)                     /* also after a flash 
         ok = panel.enc[i] < 7u && (panel.dir[i] == 1 || panel.dir[i] == -1);
     if (!ok)
         panel = PANEL_DEFAULT;
-#if FELUCCA_DINO
-    dino_panel_bind();
-#endif
 }
-
-#if FELUCCA_DINO
-static void dino_panel_bind(void)
-{
-#ifndef DINO_HOST
-    uint32_t irq = fm1_icfg();
-    fm1_irq_off();
-#endif
-    dino.mod_enc = panel.enc[EN_K1];
-    dino.bend_enc = panel.enc[EN_K2];
-    dino.mod_dir = panel.dir[EN_K1];
-    dino.bend_dir = panel.dir[EN_K2];
-    dino.arp_button = 1u << panel.btn[B_ARP];
-    dyn_bit[0] = 1u << panel.btn[B_OCTDN];
-    dyn_bit[1] = 1u << panel.btn[B_OCTUP];
-#ifndef DINO_HOST
-    fm1_irq_restore(irq);
-#endif
-}
-#endif
 
 UI_SMALL static uint32_t panel_btn_of(uint32_t matrix_id)        /* label of a matrix button, NB if none */
 {
@@ -83,9 +60,6 @@ static uint32_t enc_hold;
 UI_SMALL static int32_t panel_enc(uint32_t role)
 {
     int32_t s;
-#if FELUCCA_DINO
-    if (dino.wheel_owned && (role == EN_K1 || role == EN_K2)) return 0;
-#endif
     if ((enc_hold >> role) & 1u)
         return 0;
     s = fm1_enc_take(panel.enc[role]) * panel.dir[role];
@@ -120,8 +94,8 @@ static uint8_t usb_rate;                        /* menu USB RATE (2.7 beta): 0 A
 static uint8_t cpu1_off;                        /* menu 2ND CORE: 1 = OFF, every render unit on core 0 (cpu1.h cpu1_units);
                                                  * 2.7: ON by default (bit 26 set = OFF); core 1 starts at power-on only when ON */
 static uint8_t vis_style;                       /* the visualiser's style (ui_vis.c) */
-#if FELUCCA_DINO
-#define PANEL_VIS_N DINO_VIS_N
+#if FELUCCA_COSMIC
+#define PANEL_VIS_N 16u
 #else
 #define PANEL_VIS_N 12u
 #endif
@@ -153,7 +127,7 @@ UI_SMALL static void lights_from_word(uint32_t w)
     if (((w >> 21) & 31u) >= 1u && ((w >> 21) & 31u) <= 16u)
         lights_min = (uint8_t)(((w >> 21) & 31u) + 1u);   /* 2.6: CH n (an older SLOOP reads NOTES) */
     usb_serial = (uint8_t)((w >> 16) & 1u);
-    vis_style = (uint8_t)(((w >> 17) & 15u) % PANEL_VIS_N);   /* the visualiser (ui_vis.c) */
+    vis_style = (uint8_t)(((w >> 17) & 15u) % PANEL_VIS_N);   /* four bits also hold the Dinoperro styles */
     cpu1_off = (uint8_t)((w >> 26) & 1u);       /* menu 2ND CORE (ui_menu.c); 2.7: bit 26 set = OFF, so any older settings
                                                  * word (2.6 and before: 0) reads as ON, the two-core SLOOP (an early 2.7 beta
                                                  * set it for ON: that FM-1 reads OFF once) */

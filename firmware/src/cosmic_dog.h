@@ -1,53 +1,54 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 /* Integer contours traced from the user's cosmic dog; the LCD canvas remains the only pixel buffer. */
+/* Signed-byte offsets from (120,120) keep the same pixels while leaving room for SLOOP's boot logo. */
 #pragma once
 
-static const int16_t DOG_TAIL[][2] = {
-    {152, 157}, {160, 154}, {167, 150}, {172, 144}, {175, 138}, {177, 135}, {179, 136}, {181, 141}, {180, 148}, {178, 156}, {174, 164}, {169, 170}, {162, 177}, {156, 179}
+static const int8_t DOG_TAIL[][2] = {
+    {32, 37}, {40, 34}, {47, 30}, {52, 24}, {55, 18}, {57, 15}, {59, 16}, {61, 21}, {60, 28}, {58, 36}, {54, 44}, {49, 50}, {42, 57}, {36, 59}
 };
 _Static_assert(sizeof DOG_TAIL / sizeof DOG_TAIL[0] <= 64u, "dog contour bound");
-static const int16_t DOG_BODY[][2] = {
-    {85, 101}, {90, 90}, {99, 81}, {109, 77}, {119, 76}, {128, 77}, {137, 81}, {143, 87}, {150, 96}, {156, 104}, {159, 110}, {158, 115}, {155, 118}, {150, 120}, {148, 120}, {148, 127}, {150, 139}, {151, 151}, {154, 165}, {158, 177}, {162, 187}, {165, 198}, {165, 203}, {162, 206}, {159, 205}, {156, 201}, {152, 195}, {149, 190}, {145, 187}, {143, 187}, {141, 194}, {139, 200}, {138, 203}, {135, 203}, {133, 201}, {131, 194}, {130, 187}, {128, 185}, {125, 186}, {123, 191}, {121, 198}, {119, 202}, {116, 204}, {113, 203}, {111, 198}, {109, 192}, {106, 187}, {104, 186}, {101, 189}, {99, 193}, {97, 198}, {94, 201}, {90, 202}, {87, 201}, {85, 197}, {83, 192}, {84, 188}, {86, 182}, {89, 177}, {91, 170}, {92, 163}, {92, 158}, {90, 154}
+static const int8_t DOG_BODY[][2] = {
+    {-35, -19}, {-30, -30}, {-21, -39}, {-11, -43}, {-1, -44}, {8, -43}, {17, -39}, {23, -33}, {30, -24}, {36, -16}, {39, -10}, {38, -5}, {35, -2}, {30, 0}, {28, 0}, {28, 7}, {30, 19}, {31, 31}, {34, 45}, {38, 57}, {42, 67}, {45, 78}, {45, 83}, {42, 86}, {39, 85}, {36, 81}, {32, 75}, {29, 70}, {25, 67}, {23, 67}, {21, 74}, {19, 80}, {18, 83}, {15, 83}, {13, 81}, {11, 74}, {10, 67}, {8, 65}, {5, 66}, {3, 71}, {1, 78}, {-1, 82}, {-4, 84}, {-7, 83}, {-9, 78}, {-11, 72}, {-14, 67}, {-16, 66}, {-19, 69}, {-21, 73}, {-23, 78}, {-26, 81}, {-30, 82}, {-33, 81}, {-35, 77}, {-37, 72}, {-36, 68}, {-34, 62}, {-31, 57}, {-29, 50}, {-28, 43}, {-28, 38}, {-30, 34}
 };
 _Static_assert(sizeof DOG_BODY / sizeof DOG_BODY[0] <= 64u, "dog contour bound");
-static const int16_t DOG_CROWN[][2] = {
-    {101, 65}, {107, 56}, {117, 47}, {126, 39}, {137, 33}, {147, 30}, {157, 28}, {166, 27}, {162, 32}, {156, 39}, {151, 47}, {149, 56}, {151, 65}, {152, 72}
+static const int8_t DOG_CROWN[][2] = {
+    {-19, -55}, {-13, -64}, {-3, -73}, {6, -81}, {17, -87}, {27, -90}, {37, -92}, {46, -93}, {42, -88}, {36, -81}, {31, -73}, {29, -64}, {31, -55}, {32, -48}
 };
 _Static_assert(sizeof DOG_CROWN / sizeof DOG_CROWN[0] <= 64u, "dog contour bound");
-static const int16_t DOG_BRIM[][2] = {
-    {72, 70}, {78, 67}, {87, 66}, {97, 66}, {107, 67}, {117, 69}, {128, 71}, {140, 73}, {150, 75}, {160, 79}, {168, 84}, {175, 91}, {179, 98}, {180, 101}, {176, 103}, {169, 104}, {163, 103}, {157, 100}, {151, 94}, {147, 89}, {143, 83}, {139, 80}, {133, 77}, {126, 76}, {119, 75}, {111, 76}, {103, 77}, {97, 81}, {91, 85}, {87, 89}, {83, 90}, {78, 88}, {73, 85}, {70, 80}, {69, 76}, {70, 73}
+static const int8_t DOG_BRIM[][2] = {
+    {-48, -50}, {-42, -53}, {-33, -54}, {-23, -54}, {-13, -53}, {-3, -51}, {8, -49}, {20, -47}, {30, -45}, {40, -41}, {48, -36}, {55, -29}, {59, -22}, {60, -19}, {56, -17}, {49, -16}, {43, -17}, {37, -20}, {31, -26}, {27, -31}, {23, -37}, {19, -40}, {13, -43}, {6, -44}, {-1, -45}, {-9, -44}, {-17, -43}, {-23, -39}, {-29, -35}, {-33, -31}, {-37, -30}, {-42, -32}, {-47, -35}, {-50, -40}, {-51, -44}, {-50, -47}
 };
 _Static_assert(sizeof DOG_BRIM / sizeof DOG_BRIM[0] <= 64u, "dog contour bound");
-static const int16_t DOG_MUZZLE[][2] = {
-    {59, 125}, {61, 116}, {67, 109}, {74, 105}, {82, 104}, {90, 104}, {99, 106}, {106, 110}, {111, 116}, {113, 124}, {114, 132}, {112, 140}, {108, 147}, {102, 153}, {94, 157}, {85, 158}, {77, 156}, {69, 153}, {63, 147}, {60, 140}, {58, 133}
+static const int8_t DOG_MUZZLE[][2] = {
+    {-61, 5}, {-59, -4}, {-53, -11}, {-46, -15}, {-38, -16}, {-30, -16}, {-21, -14}, {-14, -10}, {-9, -4}, {-7, 4}, {-6, 12}, {-8, 20}, {-12, 27}, {-18, 33}, {-26, 37}, {-35, 38}, {-43, 36}, {-51, 33}, {-57, 27}, {-60, 20}, {-62, 13}
 };
 _Static_assert(sizeof DOG_MUZZLE / sizeof DOG_MUZZLE[0] <= 64u, "dog contour bound");
-static const int16_t DOG_EYE_A[][2] = {
-    {92, 95}, {93, 94}, {95, 95}, {95, 97}, {94, 98}, {92, 99}, {91, 97}, {91, 96}
+static const int8_t DOG_EYE_A[][2] = {
+    {-28, -25}, {-27, -26}, {-25, -25}, {-25, -23}, {-26, -22}, {-28, -21}, {-29, -23}, {-29, -24}
 };
 _Static_assert(sizeof DOG_EYE_A / sizeof DOG_EYE_A[0] <= 64u, "dog contour bound");
-static const int16_t DOG_EYE_B[][2] = {
-    {118, 99}, {119, 98}, {121, 99}, {121, 102}, {120, 104}, {118, 104}, {117, 103}, {117, 101}
+static const int8_t DOG_EYE_B[][2] = {
+    {-2, -21}, {-1, -22}, {1, -21}, {1, -18}, {0, -16}, {-2, -16}, {-3, -17}, {-3, -19}
 };
 _Static_assert(sizeof DOG_EYE_B / sizeof DOG_EYE_B[0] <= 64u, "dog contour bound");
-static const int16_t DOG_NOSE_A[][2] = {
-    {67, 120}, {70, 117}, {73, 117}, {75, 119}, {76, 121}, {75, 124}, {73, 127}, {70, 127}, {67, 126}, {66, 123}
+static const int8_t DOG_NOSE_A[][2] = {
+    {-53, 0}, {-50, -3}, {-47, -3}, {-45, -1}, {-44, 1}, {-45, 4}, {-47, 7}, {-50, 7}, {-53, 6}, {-54, 3}
 };
 _Static_assert(sizeof DOG_NOSE_A / sizeof DOG_NOSE_A[0] <= 64u, "dog contour bound");
-static const int16_t DOG_NOSE_A_INNER[][2] = {
-    {70, 121}, {72, 120}, {74, 121}, {73, 124}, {71, 125}, {69, 124}
+static const int8_t DOG_NOSE_A_INNER[][2] = {
+    {-50, 1}, {-48, 0}, {-46, 1}, {-47, 4}, {-49, 5}, {-51, 4}
 };
 _Static_assert(sizeof DOG_NOSE_A_INNER / sizeof DOG_NOSE_A_INNER[0] <= 64u, "dog contour bound");
-static const int16_t DOG_NOSE_B[][2] = {
-    {91, 125}, {93, 124}, {96, 123}, {99, 124}, {100, 126}, {101, 129}, {99, 131}, {97, 133}, {94, 133}, {92, 131}, {91, 128}
+static const int8_t DOG_NOSE_B[][2] = {
+    {-29, 5}, {-27, 4}, {-24, 3}, {-21, 4}, {-20, 6}, {-19, 9}, {-21, 11}, {-23, 13}, {-26, 13}, {-28, 11}, {-29, 8}
 };
 _Static_assert(sizeof DOG_NOSE_B / sizeof DOG_NOSE_B[0] <= 64u, "dog contour bound");
-static const int16_t DOG_NOSE_B_INNER[][2] = {
-    {94, 127}, {95, 126}, {98, 126}, {99, 128}, {97, 130}, {95, 130}, {93, 129}
+static const int8_t DOG_NOSE_B_INNER[][2] = {
+    {-26, 7}, {-25, 6}, {-22, 6}, {-21, 8}, {-23, 10}, {-25, 10}, {-27, 9}
 };
 _Static_assert(sizeof DOG_NOSE_B_INNER / sizeof DOG_NOSE_B_INNER[0] <= 64u, "dog contour bound");
 
-typedef struct { const int16_t (*p)[2]; uint8_t n, color; } cosmic_shape_t;
+typedef struct { const int8_t (*p)[2]; uint8_t n, color; } cosmic_shape_t;
 #define DOG_SHAPE(name, color) {DOG_##name, sizeof DOG_##name / sizeof DOG_##name[0], color}
 static const cosmic_shape_t DOG_SHAPES[] = {
     DOG_SHAPE(TAIL, 1), DOG_SHAPE(BODY, 1), DOG_SHAPE(CROWN, 2), DOG_SHAPE(BRIM, 3),
@@ -73,10 +74,11 @@ static void cosmic_update(uint32_t now, uint32_t hit)
     cosmic.ms = now;
     fall = (int32_t)dt * 3;
     if (vs.lvl[0] > energy) energy = vs.lvl[0];
+    if (vs.lvl[1] > energy) energy = vs.lvl[1];
     if (vs.lvl[2] > energy) energy = vs.lvl[2];
     if (vs.lvl[3] > energy) energy = vs.lvl[3];
     cosmic.energy = energy > cosmic.energy ? energy : clamp(cosmic.energy - fall, 0, 1000);
-    cosmic.pulse = hit & 5u ? 1000 : clamp(cosmic.pulse - (int32_t)dt * 4, 0, 1000);
+    cosmic.pulse = hit & 15u ? 1000 : clamp(cosmic.pulse - (int32_t)dt * 4, 0, 1000);
     cosmic.note_a = vis_note[0];
     cosmic.note_b = vis_note[2];
     cosmic.heavy = song.cpu_q8 >= 192u;
@@ -128,6 +130,7 @@ static void cosmic_life_seed(uint32_t note, uint32_t part)
     static const uint8_t glider[5][2] = {{1,0},{2,1},{0,2},{1,2},{2,2}};
     uint32_t h = cosmic_hash(note * 7919u + part * 104729u + cosmic_life.generation * 97u);
     uint32_t x = (h & 7u) + (part == 0u ? 0u : part == 1u ? 24u : 12u), y = (h >> 5) & 31u, i;
+    if (part == 3u) y &= 7u;
     for (i = 0; i < 5u; i++) {
         uint32_t xx = (x + ((h & 256u) ? 2u - glider[i][0] : glider[i][0])) & 31u;
         uint32_t yy = (y + ((h & 512u) ? 2u - glider[i][1] : glider[i][1])) & 31u;
@@ -145,11 +148,12 @@ static void cosmic_life_update(uint32_t now, uint32_t hit)
         cosmic_life.ms = now - 200u;
         cosmic_life.fed_ms = now;
     }
-    cosmic_life.hits |= (uint8_t)(hit & 13u);
+    cosmic_life.hits |= (uint8_t)(hit & 15u);
     if (now - cosmic_life.ms < (cosmic.heavy ? 200u : 100u)) return;
     cosmic_life.ms = now;                           /* A late UI frame never catches up in a long loop. */
     cosmic_life_step();
     if (cosmic_life.hits & 1u) cosmic_life_seed(cosmic.note_a, 0);
+    if (cosmic_life.hits & 2u) cosmic_life_seed(vis_note[1], 3);
     if (cosmic_life.hits & 4u) cosmic_life_seed(cosmic.note_b, 1);
     if (cosmic_life.hits & 8u) cosmic_life_seed(vis_note[3], 2);
     cosmic_life.hits = 0;
@@ -202,7 +206,7 @@ static void cosmic_polygon(const cosmic_shape_t *shape, int32_t sn, int32_t cs, 
     int32_t px[64], py[64], y, first = 240, last = 0;
     uint32_t i, n = shape->n;
     for (i = 0; i < n; i++) {
-        int32_t dx = shape->p[i][0] - 120, dy = shape->p[i][1] - 140;
+        int32_t dx = shape->p[i][0], dy = shape->p[i][1] - 20;
         px[i] = 120 * 16 + ((dx * cs - dy * sn) * scale >> 19);
         py[i] = (140 - lift) * 16 + ((dx * sn + dy * cs) * scale >> 19);
         if (py[i] / 16 < first) first = py[i] / 16;

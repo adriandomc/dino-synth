@@ -1,7 +1,6 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 /* Compact 240 x 240 song-order editor. All changes and flash saves require
  * stopped transport. The four existing project slots are sections A..D. */
-#if FELUCCA_ARRANGER
 static uint8_t song_cursor, song_store_armed, song_load_armed;
 static uint32_t song_store_deadline;
 UI_SMALL static int on_song_page(void) { return !ui.home && cur_page()->scope == SC_SONG; }
@@ -153,4 +152,3 @@ UI_SMALL static void song_screen_input(uint32_t pressed, uint32_t home)
     /* Unused encoders have no hidden action on this screen. */
     panel_enc(EN_SELECT); panel_enc(EN_ALGO); panel_enc(EN_PRESET);
 }
-#endif

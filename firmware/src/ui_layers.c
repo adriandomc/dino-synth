@@ -1,12 +1,4 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
-#if FELUCCA_DINO
-static const uint8_t LAYER_BTN[LY_COUNT] = {NB, B_FX, B_EDIT, B_ARP, B_SEQ, B_SCL, B_GLO, B_SAVE};
-static uint32_t key_of_white(uint32_t w) { return key_of_lane(w & 15u); }
-static void layers_init(void)
-{
-    dino_panel_bind();
-}
-#else
 /* LAYERS, teenage-engineering style: hold a function button, touch a key (or turn a knob). While the
  * button is held the screen shows what the 16 white keys and KNOB 1..4 do now; tapped (pressed and
  * let go without touching anything) the button opens its pages as before.
@@ -1076,4 +1068,3 @@ UI_SMALL static void hold_screen_draw(void)
     te_text_c(120, 30, "keep holding", TE_G3);
     cv_blit(0, 160);
 }
-#endif

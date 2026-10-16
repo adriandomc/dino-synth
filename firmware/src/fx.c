@@ -1215,13 +1215,6 @@ static void mix_block(int32_t *out, uint32_t n)
     dust_process(mix_l, mix_r, n);
     punch_process(mix_l, mix_r, n);
     djf_process(mix_l, mix_r, n);
-#if FELUCCA_DINO
-    for (i = 0; i < n; i++)
-        if (mix_l[i] > 2 || mix_l[i] < -2 || mix_r[i] > 2 || mix_r[i] < -2) {
-            dino_signal_ms = fm1_ms;                  /* Includes FX tails even when MASTER is at zero. */
-            break;
-        }
-#endif
     m1 = (int32_t)song.master_q12;
     m0 = master_cur < 0 ? m1 : master_cur;
     master_cur = m1;

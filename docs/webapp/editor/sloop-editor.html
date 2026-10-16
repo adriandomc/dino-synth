@@ -7,7 +7,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DINO SYNTH Editor</title>
+<title>SLOOP Editor</title>
 
 <style>
   /* SLOOP 2.4 editor: the FM-1's screen on a big display. Black, the four track colours, the device's own
@@ -75,9 +75,6 @@
   progress::-moz-progress-bar { background: var(--trk); }
   .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 8px; }
   .bar .grow { flex: 1; }
-  #dino-mix, #dino-wheels { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 16px; margin: 16px 0; }
-  #dino-mix label, #dino-wheels label { display: grid; gap: 6px; min-width: 0; }
-  #p-performance select { max-width: 100%; }
   .seg { display: inline-flex; flex-wrap: wrap; gap: 2px; }
   .seg button, button.tog { background: var(--s2); color: var(--dim); }
   .seg button[aria-pressed="true"], button.tog[aria-pressed="true"] { background: var(--trk); color: #000; }
@@ -94,8 +91,7 @@
   .side { position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; gap: 16px; padding: 20px 16px;
           border-right: 1px solid var(--line); overflow-y: auto; }
   .brand { display: flex; align-items: flex-end; gap: 10px; color: var(--fg); text-decoration: none; }
-  .brand svg { display: none; }
-  .brand::before { content: "DINO SYNTH"; color: var(--t1); font-size: 24px; line-height: 28px; }
+  .brand svg { width: 132px; height: auto; display: block; }
   .brand span { color: var(--dim); text-transform: lowercase; padding-bottom: 2px; }
   .tabs { display: flex; flex-direction: column; gap: 2px; }
   .tabs .navh { color: var(--s3); margin: 14px 0 4px 12px; text-transform: lowercase; }
@@ -850,7 +846,7 @@
 <body>
 <div class="app">
   <aside class="side">
-    <a class="brand" href="#sound" aria-label="DINO SYNTH">
+    <a class="brand" href="#sound" aria-label="SLOOP">
       <svg viewBox="44 24 572 186" role="img" aria-hidden="true">
         <path d="M59.29 200.71 A100.00 100.00 0 1 1 200.71 200.71" fill="none" stroke="#F2F2F2" stroke-width="12" stroke-linecap="round"/>
         <rect x="95" y="46" width="10" height="136" rx="5" fill="#F2F2F2"/>
@@ -870,7 +866,6 @@
       <span>editor</span>
     </a>
     <nav class="tabs" id="tabs" role="tablist" aria-orientation="vertical">
-      <button role="tab" data-tab="performance" data-t="tabPerformance">DINO PERFORMANCE</button>
       <div class="navh" data-t="navTrack"></div>
       <button role="tab" data-tab="live" data-t="tabLive" data-ic="note_eight"></button>
       <button role="tab" data-tab="sound" data-t="sound" data-ic="symbol_audio"></button>
@@ -893,7 +888,7 @@
       <span id="live"></span>
       <span id="mock" hidden data-t="mock"></span>
       <button id="connect" class="pri" data-t="connect" data-ic="port_usb_c"></button>
-      <div class="links"><a class="dim" href="https://github.com/adriandomc/dino-synth/blob/dino-synth/DINO.md#instalación-y-recuperación" target="_blank" rel="noopener" data-t="installer"></a><button class="lang" id="lang"></button></div>
+      <div class="links"><a class="dim" href="https://github.com/adriandomc/dino-synth/blob/dino-synth/SLOOP-DINOPERRO.md#instalación" target="_blank" rel="noopener" data-t="installer"></a><button class="lang" id="lang"></button></div>
       </div>
   </aside>
 
@@ -1129,38 +1124,6 @@
       <div class="groups" id="dsgroups"></div>
     </section>
 
-    <section class="panel" id="p-performance" data-tab="performance" data-dev hidden>
-      <div class="card">
-        <h2>DINO SYNTH · PERFORMANCE</h2>
-        <p class="dim">Two timbres, direct playing. Factory patches load dry. A and B share the available voices.</p>
-        <div class="bar">
-          <label>Mode <select id="dino-mode"><option value="0">SINGLE</option><option value="1">LAYER</option><option value="2">SPLIT</option><option value="3">DRUMS</option></select></label>
-          <label>Focus <select id="dino-focus"><option value="0">A</option><option value="1">B</option></select></label>
-          <label>Split · MIDI note <input id="dino-split" type="number" min="0" max="127" value="60"></label>
-          <label>Visual <select id="dino-visual"></select></label>
-          <button id="dino-panic">Panic</button>
-        </div>
-        <div id="dino-mix" class="bar"></div>
-        <div id="dino-wheels">
-          <label>Vibrato <input id="dino-mod" type="range" min="0" max="127" value="0"></label>
-          <label>Pitch bend · hold and drag <input id="dino-bend" type="range" min="-8192" max="8191" value="0"></label>
-        </div>
-        <p class="dim">On the FM-1: K1 vibrato · hold ARP + turn K2 for bend; release ARP to center. SEL opens the preset list. REC selects A/B.</p>
-        <div id="dino-keys" class="bar" aria-label="Playable keyboard"></div>
-        <p id="dino-state" role="status"></p>
-      </div>
-      <div class="card">
-        <h2>SAVE</h2>
-        <p class="dim">PATCH stores the focused timbre and its effects. PERFORMANCE stores A/B, split, mix, shared effects, drums and visual. Flash writes wait for silence, including effect tails.</p>
-        <div class="bar">
-          <label>Type <select id="dino-kind"><option value="0">PATCH</option><option value="1">PERFORMANCE</option></select></label>
-          <label>Destination <select id="dino-slot"></select></label>
-          <button id="dino-save" class="pri">Save</button><button id="dino-cancel">Cancel pending save</button>
-        </div>
-        <div id="dino-bank-row" class="bar" hidden><label>FM6 bank full · replacement <select id="dino-bank"></select></label><button id="dino-bank-replace" hidden>Replace chosen FM6 bank slot</button></div>
-        <div id="dino-memories"></div>
-      </div>
-    </section>
     <section class="panel" id="p-projects" data-tab="projects" data-dev hidden>
       <div class="card">
         <h2 data-t="projects" data-ic="symbol_folder"></h2>
@@ -1226,9 +1189,9 @@
       </div>
     </section>
 
-    <footer>DINO SYNTH, based on Sloop 2.7 by isod89 and Felucca by Leo Kuroshita (@kurogedelic), <a href="https://hugelton.com" target="_blank" rel="noopener">Hügelton Instruments</a>. GPL-3.0.<br>
+    <footer>SLOOP, based on Felucca by Leo Kuroshita (@kurogedelic), <a href="https://hugelton.com" target="_blank" rel="noopener">Hügelton Instruments</a>. GPL-3.0.<br>
       <span data-t="foot"></span> M-VAVE and FM-1 are trademarks of their respective owners.<br>
-      <a href="https://github.com/adriandomc/dino-synth/blob/dino-synth/web/FUKIAI-LICENSE.txt" target="_blank" rel="noopener" data-t="iconsCredit"></a> · <span data-t="fontCredit"></span></footer>
+      <a href="https://isod89.github.io/sloop-fm1/webapp/editor/FUKIAI-LICENSE.txt" target="_blank" rel="noopener" data-t="iconsCredit"></a> · <span data-t="fontCredit"></span></footer>
   </main>
 </div>
 <dialog id="preview-note-dialog" aria-labelledby="preview-note-title">
@@ -1262,7 +1225,7 @@ const CMD = { INFO: 1, GET: 2, SET: 3, DUMP: 4, DESC: 5, STEP_GET: 6, STEP_SET: 
   FILL_GET: 41, FILL_SET: 42,                         /* v8 (SLOOP 2.4): the steps' fill conditions */
   FM6_GET: 68, FM6_PUT: 69, FM6_LIST: 70, FM6_ERASE: 71,    /* v9 (SLOOP 2.4): the FM6 engine's patches (Felucca 1.0's numbers) */
   DSYN_LIST: 72, DSYN_GET: 73, DSYN_PUT: 74, DSYN_STORE: 75, DSYN_PLAY: 76,   /* v10 (SLOOP 2.5): the SYN drum kits */
-  LIVE: 77, DINO: 78 };                                /* DINO v13: direct performance and SAVE */
+  LIVE: 77 };                                         /* v12 (SLOOP 2.7): the LIVE page (firmware editor_live.c) */
 /* v12: LIVE ops (firmware editor_live.c) and the layers its keys reach (seq.c LY_*: 5 SEL, 6 GLO, 7 SAVE) */
 const LIVE = { STATE: 0, PLAY: 1, KEY: 2, FX: 3, REC: 4, UNDO: 5, LY_KEY: 5, LY_MIX: 6, LY_SONG: 7, NFX: 27,
   /* (2.7) the page's own (editor_live.c 6..12): ROLL and ERASE while held, the pattern's tools, a chain of sections, THROW,
@@ -1416,11 +1379,6 @@ function stepExt(r, a, o) {
 }
 
 const parse = {
-  [CMD.DINO](a) {
-    const r = new Reader(a), o = {op:r.b(), rc:r.b(), mode:r.b(), split:r.b(), focus:r.b(), octave:r.b()-3, style:r.b(), status:r.b(), slots:[]};
-    for (let i=0;i<4;i++) o.slots.push({kind:r.b(), name:r.s()});
-    return o;
-  },
   [CMD.INFO](a) {
     const r = new Reader(a);
     const o = { version: r.s(), nengines: r.b(), pcount: r.b(), gcount: r.b(), nstep: r.b(), pe0: r.b(), engines: [] };
@@ -1708,7 +1666,7 @@ function replyMatches(cmd, args, a) {
     case CMD.FM6_ERASE: return a[0] === args[0];
     case CMD.DSYN_GET: return a[0] === args[0];
     case CMD.DSYN_PUT: case CMD.DSYN_PLAY: return a[0] === args[0] && a[1] === args[1];
-    case CMD.LIVE: case CMD.DINO: return a[0] === args[0];
+    case CMD.LIVE: return a[0] === args[0];
     default: return true;
   }
 }
@@ -2511,15 +2469,6 @@ async function backupRestore(rq, file, progress = () => {}) {
   /* (2.6) projects newer than the device reads (a 2.6 backup into 2.5): stop before anything is written (it stopped at
      the first project, the preset banks already replaced) */
   const info = parse[CMD.INFO](await rq(req.info(), { timeout: 1000, retries: 2 }));
-  const dinoRecords = [...m.values()].filter(d=>d.length>=4&&d[0]===68&&d[1]===73&&[65,78].includes(d[2])&&d[3]===49);
-  if ((String(file.firmware||'').startsWith('DINO SYNTH')||dinoRecords.length) && !info.version.startsWith('DINO SYNTH'))
-    throw new BackupError('bkNewer','A DINO backup requires DINO SYNTH firmware.');
-  if (info.version.startsWith('DINO SYNTH') && !bkFwAtLeast(info.version,[0,2,0]) && dinoRecords.some(d=>d.length>33&&d[33]>=15))
-    throw new BackupError('bkNewer','CONWAY DREAM backups require DINO SYNTH 0.2 or newer.');
-  if (info.version.startsWith('DINO SYNTH') && (bkProjFormat(m.get(0))>0 || [2,3,4,5].some(id=>{
-    const format=bkProjFormat(m.get(id));return format>0&&format<6;
-  })))
-    throw new BackupError('bkNewer','Legacy Sloop songs cannot be restored into DINO. Export individual sounds and samples instead.');
   const newest = Math.max(0, ...[0, 2, 3, 4, 5].filter((id) => m.has(id)).map((id) => bkProjFormat(m.get(id))));
   if (newest > bkDevFormat(info)) throw new BackupError("bkNewer", `${file.firmware || "?"} > ${info.version}`);
   /* (2.6) a backup of a 2.6 FM-1 without object 10 had the MIDI settings at their defaults (nothing learned, channels
@@ -3238,7 +3187,7 @@ function makeMockDevice(opt = {}) {
     for (let i = 0; i < 8; i++) st.p[P_E0 + i] = pr.e[i];
     [1, 2, 3, 4].forEach((id, k) => { st.p[id] = pr.env[k]; });
     st.p[37] = pr.mono ? 2 : 0;
-    st.p[33] = 0; st.p[34] = opt.dino ? 0 : 24; st.p[35] = opt.dino ? 0 : 28; st.p[36] = opt.dino ? 0 : 36;
+    st.p[33] = 0; st.p[34] = 24; st.p[35] = 28; st.p[36] = 36;
     for (let i = P_SLCR; i < P_CHORD; i++) st.p[i] = TP[i].def;   /* a factory preset turns the SLICER off (CHORD stays: the key) */
     if (demo && pr.pat && seqEmpty()) loadPattern(pr.pat - 1);
     if (st.engine === FM6_E) fm6Slot(st.tracks[st.sel], st.p[P_E0 + 7]);   /* eng_fm6.c fm6_track_loaded: the slot's patch */
@@ -3280,16 +3229,7 @@ function makeMockDevice(opt = {}) {
   setEngine(0);
   clearSteps();
   applyPreset(4, true);                             /* WOBBLE, a recorded-looking pattern on track 1 (mock only) */
-  if (opt.dino) {
-    st.tracks.forEach((tr, i) => {
-      tr.step.forEach((x) => Object.assign(x, {n:0, notes:[0,0,0,0], time:2, flags:0, vel:0}));
-      [17,18,19,20,21,22,23,24,25,26,27,29,30,31,32,49,51,52].forEach((id) => { tr.p[id]=0; });
-      tr.p[40] = i === 0 ? 0 : 1;
-    });
-    st.g[26] = st.g[32] = st.g[37] = 0;
-    st.dino = {mode:0, split:60, focus:0, style:12, status:0, octave:0};
-  }
-  const project = () => JSON.parse(JSON.stringify({ tracks: st.tracks, sel: st.sel, g: st.g, ...(opt.dino?{dino:{...st.dino,status:0}}:{}) }));
+  const project = () => JSON.parse(JSON.stringify({ tracks: st.tracks, sel: st.sel, g: st.g }));
   /* v10: a factory synthesised kit (DSYN_MOCK_KITS), SYN1..4 = copies of 808, 909, TRAP, TECHNO */
   const dsynRaw = b64dec(DSYN_MOCK_KITS);
   function dsynFactory(i) {
@@ -3301,38 +3241,11 @@ function makeMockDevice(opt = {}) {
     if (!st.dsyn) { st.dsyn = [0, 1, 5, 12].map(dsynFactory); st.dsynStored = DSYN.bankEncode(st.dsyn); }
     return st.dsyn;
   }
-  st.slots[0] = opt.dino ? null : project();
+  st.slots[0] = project();
 
   function handle(cmd, a) {
     const out = [];
     const b = (x) => out.push(x & 0x7F), v = (x) => out.push(...v14enc(x)), s = (x) => out.push(...strEnc(x));
-    if (opt.dino && cmd === CMD.DINO) {
-      const d = st.dino, op = a[0] || 0; let rc = 0;
-      if (op === 1) {
-        if (a.length < 5 || a[1]>3 || a[2]>127 || a[3]>1 || a[4]>=16) rc=1;
-        else {
-          Object.assign(d,{mode:a[1],split:a[2],focus:a[3],style:a[4]});
-          if(a.length>5) d.octave=clamp(a[5]-3,-3,3);
-          st.sel=d.mode===3?3:d.focus?2:0;
-          st.tracks.forEach((tr,i)=>{tr.p[40]=d.mode===3?(i===3?0:1):i===1||i===3?1:d.mode===0?(i===st.sel?0:1):0;});
-        }
-      } else if(op===2) {
-        const p=st.slots[a[1]];
-        if(!p?.dino) rc=2;
-        else {st.tracks=JSON.parse(JSON.stringify(p.tracks));st.g=p.g.slice();st.sel=p.sel;Object.assign(d,p.dino);}
-      } else if(op===3) {
-        const kind=a[1], slot=a[2];
-        if(kind>1 || slot>=(kind?4:32) || (!kind && d.mode===3)) rc=1;
-        else if(kind) {st.slots[slot]={...project(),dino:{...d},name:`PERF ${slot+1}`};d.status=2;}
-        else {st.bank[slot]=snapshot((ENG[st.engine]?.presets[st.preset]?.name||ENG[st.engine]?.name||'PATCH').slice(0,12));d.status=2;}
-      } else if(op===4) d.status=0;
-      else if(op===5) {const p=st.slots[a[1]],name=new Reader(a.slice(2)).s().slice(0,12);if(!p?.dino||!name)rc=1;else p.name=name;}
-      else if(op!==0) rc=1;
-      [op,rc,d.mode,d.split,d.focus,d.octave+3,d.style,d.status].forEach(b);
-      for(const p of st.slots){b(!p?0:p.dino?1:2);s(!p?'EMPTY':p.dino?p.name:'LEGACY SONG');}
-      return frame(cmd,out);
-    }
-    if (opt.dino && [CMD.PROJECT,CMD.STEP_GET,CMD.STEP_SET,CMD.TRACK_STEP,CMD.DRUM_STEP,CMD.LOCK_GET,CMD.LOCK_SET,CMD.MICRO_GET,CMD.MICRO_SET,CMD.FILL_GET,CMD.FILL_SET].includes(cmd)) return frame(cmd,[6]);
     if (opt.legacy && cmd >= CMD.UP_LIST) return null;
     if (opt.v3 && cmd >= CMD.TRACK_PARAM) return null;
     if (opt.noBackup && cmd >= CMD.LOCK_GET) return null;   /* (a v5 device: no locks either) */
@@ -3390,7 +3303,7 @@ function makeMockDevice(opt = {}) {
         if (u) {                                    /* the sound; the mix, pattern and key parameters stay (param_kept) */
           const KEPT = [0, 25, 26, 27, 29, 30, 31, 32, 39, 40, P_CHORD], mix = KEPT.map((i) => st.p[i]);
           st.engine = u.engine; st.preset = 0; st.p = u.p.slice();
-          if (!opt.dino) KEPT.forEach((i, k) => { st.p[i] = mix[k]; });
+          KEPT.forEach((i, k) => { st.p[i] = mix[k]; });
           /* LIVE firmware: a user preset brings its sound only, never its pattern */
         }
         b(a[0]); b(u ? 0 : 1);
@@ -3411,10 +3324,10 @@ function makeMockDevice(opt = {}) {
         b(0);
         break;
       case CMD.INFO:
-        s(opt.dino ? "DINO SYNTH 0.2 (MOCK)" : opt.legacy ? "FELUCCA 0.4 BETA (MOCK)" : opt.v3 ? "FELUCCA 0.8 (MOCK)" : "FELUCCA SLOOP 2.6 (MOCK)"); b(ENG.length); b(P_COUNT); b(G_COUNT); b(NSTEP); b(P_E0);
+        s(opt.legacy ? "FELUCCA 0.4 BETA (MOCK)" : opt.v3 ? "FELUCCA 0.8 (MOCK)" : "FELUCCA SLOOP 2.6 (MOCK)"); b(ENG.length); b(P_COUNT); b(G_COUNT); b(NSTEP); b(P_E0);
         ENG.forEach((e) => s(e.name));
         if (!opt.legacy) b(NTRK);
-        if (v5) b(opt.dino ? 13 : mockProto);
+        if (v5) b(mockProto);   /* v12: LIVE (2.7), v11: your theme (2.7) */   /* v10: SYN kits (v9: FM6 patches, v8: fill conditions, v7: nudges and locks, v6: backup) */
         break;
       case CMD.GET: case CMD.SET: {
         if (a.length < 2) return null;
@@ -3669,7 +3582,7 @@ function makeMockDevice(opt = {}) {
               if (st.playing && P.buf.subarray(ARR.OFF, ARR.OFF + ARR.SIZE).some((v, k) => v !== st.settings[ARR.OFF + k])) { rc = 3; }
               else st.settings = P.buf.slice();
             }
-            else if (id === 0) { const o = js(); st.tracks = o.tracks; st.sel = o.sel; st.g = o.g; if(opt.dino&&o.dino)st.dino=o.dino; }
+            else if (id === 0) { const o = js(); st.tracks = o.tracks; st.sel = o.sel; st.g = o.g; }
             else if (id <= 5) st.slots[id - 2] = P.len ? js() : null;
             else if (id === 11) {                           /* your theme (2.7; editor.c: stopped only; 0 bytes: none) */
               const th = P.len ? THEME.decode(P.buf) : null;
@@ -3792,7 +3705,6 @@ function makeMockDevice(opt = {}) {
   }
   function liveOp(a) {
     const L = st.live, [op, x = 0, y = 0, z = 0] = a;
-    if (opt.dino && ![LIVE.STATE,LIVE.DRUM_TW,LIVE.MASTER].includes(op)) { st.playing=false; st.rec=0; return; }
     liveTick();
     if (op === LIVE.PLAY) {
       const play = x === 2 ? !st.playing : !!x;
@@ -4656,7 +4568,6 @@ function setLabel(e, txt) { e.replaceChildren(...(e.dataset.ic ? [icon(e.dataset
 
 const TEXT = {
   ja: {
-    tabPerformance: "DINO パフォーマンス",
     /* 2.7: the LIVE page */
     sfTitle: "ソング", sfHelp: "ソングファイルには、再生中のループ、セクション A–D とその順番（SONG 画面）が入ります。曲ごとに1つ保存し、LIVE ページのプレイリストから順に演奏できます。読み込むと FM-1 の A–D とループが置き換わります（先に停止）。",
     sfSave: "このソングを書き出す", sfLoad: "ソングファイルを読み込む", sfName: "ソングの名前", sfSaving: "ソングを書き出し中 ", sfSaved: "ソングを書き出しました：",
@@ -4994,7 +4905,6 @@ const TEXT = {
     songSent: "ソングを FM-1 に送りました",
   },
   en: {
-    tabPerformance: "DINO PERFORMANCE",
     /* 2.7: the LIVE page */
     sfTitle: "Songs", sfHelp: "A song file holds the loop playing, the sections A–D and their order (the SONG screen). Keep one per song, and play them one after the other from the LIVE page's playlist. Loading one replaces A–D and the loop on the FM-1 (stop it first).",
     sfSave: "Export this song", sfLoad: "Load a song file", sfName: "The song's name", sfSaving: "Exporting the song ", sfSaved: "Song exported: ",
@@ -5166,7 +5076,7 @@ const TEXT = {
     putDone: "Written to the device: slot ", storedSlot: "Stored on the device: slot ", erasedSlot: "Erased slot ",
     loadedUser: "Loaded ", reloaded: "The sound changed on the device: read again", readingBank: "Reading the slots",
     badEngine: "This firmware has no such engine: ", flashFail: "Write failed (rc {rc})",
-    installer: "DINO SYNTH installer",
+    installer: "SLOOP installer",
     offline: "Download the editor (offline on a computer: open it in Chrome or Edge)",
     install: "Install the app (works offline, Android too)",
     tabSeq: "Sequencer", tabTracks: "Tracks", tabSettings: "Settings",
@@ -5361,9 +5271,7 @@ $("lang").addEventListener("click", () => { lang = lang === "ja" ? "en" : "ja"; 
 
 /* ---------------------------------------------------------------- tabs --- */
 /* one panel at a time; the last one is remembered (localStorage) and in the URL hash (#sound ...) */
-const TABS = ["performance", "live", "sound", "sequencer", "tracks", "song", "library", "samples", "kits", "drumsynth", "projects", "settings", "theme"];
-const isDino = () => !!dev?.info?.version?.startsWith("DINO SYNTH");
-const dinoTabs = new Set(["performance","sound","library","samples","kits","drumsynth","projects","settings","theme"]);
+const TABS = ["live", "sound", "sequencer", "tracks", "song", "library", "samples", "kits", "drumsynth", "projects", "settings", "theme"];
 const TAB_KEY = "felucca-editor-tab";
 const TRACK_TABS = new Set(["sound", "sequencer", "tracks"]);
 let tab = (() => {
@@ -5375,7 +5283,6 @@ let tab = (() => {
 const hasTracks = () => !!dev && !!dev.info && !!dev.info.ntrk;
 function showTab(name) {
   if (!TABS.includes(name)) name = "sound";
-  if (isDino() && !dinoTabs.has(name)) name = "performance";
   const prev = tab;
   tab = name;
   try { localStorage.setItem(TAB_KEY, name); } catch (e) { /* no storage */ }
@@ -5392,9 +5299,6 @@ function renderPanels() {
     b.setAttribute("aria-selected", on ? "true" : "false");
     b.tabIndex = on ? 0 : -1;
     if (b.dataset.tab === "tracks") b.hidden = !tracksOk;
-    if (isDino() || !dev) b.hidden = !dinoTabs.has(b.dataset.tab);
-    else if (b.dataset.tab === "performance") b.hidden = true;
-    if (b.dataset.tab === "projects") b.textContent = isDino() || !dev ? "BACKUP / RESTORE" : t("projects");
   }
   const ready = !!dev && !!dev.dump;
   let hint = "";
@@ -5409,17 +5313,14 @@ function renderPanels() {
   if (hint) $("hint").textContent = t(MOCK && hint === "needDevice" ? "previewLocalConnect" : hint);
   $("trackbar").hidden = !(ready && hasTracks() && TRACK_TABS.has(want));
   const nb = $("tabs").querySelector(`button[data-tab="${want}"]`);   /* the page's title: its name in the side bar */
-  $("pagetitle").textContent = nb ? nb.dataset.t ? t(nb.dataset.t) : nb.textContent : "";
-  if (isDino() && want==='projects') $("pagetitle").textContent='BACKUP / RESTORE';
+  $("pagetitle").textContent = nb ? t(nb.dataset.t) : "";
   if (want === "kits") renderKits();
   if (want === "drumsynth" && ready) {                 /* (2.5) the SYN kits, read once per connection */
     if (DS.dev !== dev) { Object.assign(DS, { dev, kit: null, list: null, k: 0, lane: 0 }); if (dsOk()) op(() => dsLoad(0)); renderDs(); } else renderDs();
   }
   if (want === "theme") renderTheme();                  /* (2.7) works without a device too */
   if (want === "live" && ready) lvShow(); else lvHide();   /* (2.7) the LIVE page reads the FM-1 while it shows */
-  $("preview").hidden = !dev || isDino() || !MOCK || want === "live";
-  if (want === "performance" && ready) dinoRender();
-  if (isDino()) { $("slots").closest(".card").hidden = true; $("sfgroup").hidden = true; }
+  $("preview").hidden = !MOCK || want === "live";
   if (want === "song" && ready) {                      /* (2.5) read the song order once per connection */
     if (SG.dev !== dev) { Object.assign(SG, { dev, rows: null, err: "", dirty: false }); op(readSong); } else renderSong();
   }
@@ -5448,7 +5349,7 @@ let localAudio = null, previewStarting = null, previewPlaying = false, previewOc
 const previewHeld = new Map();
 let previewPositions = [-1, -1, -1, -1];
 const PREVIEW_KEYS = ["a", "w", "s", "e", "d", "f", "t", "g", "y", "h", "u", "j", "k", "o", "l", "p"];
-$("preview").hidden = true;
+$("preview").hidden = !MOCK;
 $("preview-volume").setAttribute("aria-label", "Local audio volume");
 function previewButton(id, key, shape) {
   const b = $(id), label = t(key), stamp = `${lang}:${label}:${shape}`;
@@ -5959,7 +5860,7 @@ $("preview-keys").addEventListener("focusout", (e) => {
 });
 function previewEditing(e) { return e.target.closest("input, select, textarea, [contenteditable='true'], .preview-sequence button, #preview-note-dialog, #preview-disclosure"); }
 window.addEventListener("keydown", (e) => {
-  if (!MOCK || !dev?.dump || isDino() || tab === "live" || e.repeat || e.ctrlKey || e.metaKey || e.altKey || previewEditing(e)) return;
+  if (!MOCK || !dev?.dump || tab === "live" || e.repeat || e.ctrlKey || e.metaKey || e.altKey || previewEditing(e)) return;
   if (e.code === "Space") { e.preventDefault(); playPreview().catch(previewError); return; }
   const i = PREVIEW_KEYS.indexOf(e.key.toLowerCase());
   if (i < 0) return;
@@ -6047,7 +5948,7 @@ async function connect() {
   sayK("connecting");
   try {
     if (!access) {
-      if (MOCK) { mock = makeMockDevice({ auto: false, dino: QS.get("legacy") !== "1", legacy: QS.get("legacy") === "1", onChange: previewChanged }); access = mock.access; }
+      if (MOCK) { mock = makeMockDevice({ auto: false, legacy: QS.get("legacy") === "1", onChange: previewChanged }); access = mock.access; }
       else {
         try { access = await navigator.requestMIDIAccess({ sysex: true }); }
         catch (e) { sayK("denied"); return; }
@@ -6096,8 +5997,6 @@ async function connect() {
 }
 
 function disconnect(reasonKey = "disconnected") {
-  dinoAllOff();
-  if(isDino()) dinoCenter();
   stopPreview();
   if (dev) {
     dev.link.close();
@@ -6158,7 +6057,7 @@ async function load(d) {
       d.names[e] = r.names;
       d.titles[e] = r.titles;
     }
-    for (let k = 0; !isDino() && k < 4; k++) {       /* legacy project slots */
+    for (let k = 0; k < 4; k++) {                    /* PROJECT op 2: is the slot used */
       try { d.slotUsed[k] = parse[CMD.PROJECT](await d.link.request(req.project(2, k))).used; }
       catch (e) { if (e.message === "closed") throw e; }
     }
@@ -6174,7 +6073,6 @@ async function load(d) {
     await libAdopt(d);
     if (d.info.ntrk) d.sel = parse[CMD.TRACK](await d.link.request(req.track())).sel;   /* v3: the selected track */
     d.dump = await getDump();
-    if (isDino()) await dinoRead();
     buildUI();
     renderPanels();
     await loadSteps();
@@ -6209,7 +6107,6 @@ async function rereadEngineDesc() {
 }
 
 async function loadSteps() {
-  if (isDino()) { dev.steps=[]; dev.dsteps=[]; return; }
   const n = dev.info.nstep, drum = drumGrid();
   if (!dev.dsteps) dev.dsteps = [];
   for (let i = 0; i < n; i++) {
@@ -6222,8 +6119,8 @@ async function loadSteps() {
   renderSteps();
 }
 /* v7: the selected track's nudges and locks (none on older firmware); v8: its fill conditions too */
-const hasLocks = () => !isDino() && !!dev && !!dev.info && dev.info.proto >= 7;
-const hasFill = () => !isDino() && !!dev && !!dev.info && dev.info.proto >= 8;
+const hasLocks = () => !!dev && !!dev.info && dev.info.proto >= 7;
+const hasFill = () => !!dev && !!dev.info && dev.info.proto >= 8;
 async function loadLocks() {
   const d = dev;
   if (!hasLocks()) { d.micro = null; d.locks = null; d.fill = null; return; }
@@ -6264,8 +6161,6 @@ function renderTrackbar() {
   }
   for (const b of box.children) {
     const i = +b.dataset.i, x = dev.mix && dev.mix.tracks[i];
-    b.hidden = isDino() && i === 1;
-    if (isDino()) b.firstChild.textContent = i===0?'A':i===2?'B':'DRUMS';
     b.setAttribute("aria-pressed", i === (dev.sel || 0) ? "true" : "false");
     const nm = !x ? [i === ntrk - 1 ? "DRUMS" : "", ""] : x.engine >= dev.info.nengines ? [(dev.kitNames || [])[x.e0] || "", "drums"]
       : [(dev.names[x.engine] || [])[x.preset] || "", String(dev.info.engines[x.engine] || "").toLowerCase()];
@@ -6277,9 +6172,6 @@ function renderTrackbar() {
 }
 function selectTrack(i) {
   if (!dev || !hasTracks() || i === dev.sel) return;
-  if (isDino()) {
-    const d=dev.dino; dinoWrite(1,i===3?3:d.mode===3?0:d.mode,d.split,i===2?1:i===0?0:d.focus,d.style); return;
-  }
   op(async () => {
     dev.sel = parse[CMD.TRACK](await rq(req.track(i))).sel;
     await afterSoundChange();
@@ -6456,7 +6348,6 @@ function buildGroups() {
   const known = EXPECT.pcount.indexOf(info.pcount);
   if (known >= 0 && EXPECT.gcount.includes(info.gcount) && info.pe0 === EXPECT.pe0[known]) {
     for (const g of LAYOUT(info.pe0)) {
-      if (isDino() && ["SEL","ARP","SEQ PATTERN","TEXTURE"].includes(g.t)) continue;
       /* a card per button of the device (ENV, LFO, EDIT ...), its pages as rows of four knobs, one colour per knob */
       const div = el("div", { class: "group" }, el("h2", { ic: HEAD_IC[g.t] },
         g.engine ? `EDIT ${info.engines[dev.dump.engine] || ""}` : g.t));
@@ -6489,8 +6380,6 @@ function buildGroups() {
 }
 
 function paramRow(s, id) {
-  if (isDino() && ((!s && ((id>=17&&id<=27)||(id>=29&&id<=32)||[49,51,52].includes(id))) ||
-      (s && [1,2,15,16,17,18,19,21,22,23,30,33,34,35,36,37,38,39,40,41,42,43,45,47,48].includes(id)))) return null;
   const d = s ? dev.gdesc[id] : dev.pdesc[id];
   if (!visible(d) || (s === 1 && G_SKIP.has(d.label))) return null;
   const k = key(s, id);
@@ -6661,7 +6550,6 @@ function report(err) { if (err && err.message !== "closed") { console.warn(err);
 /* projects: the protocol cannot ask whether a slot is used without loading or saving it */
 function renderSlots() {
   const box = $("slots");
-  if (isDino()) { box.replaceChildren(); return; }
   box.replaceChildren();
   for (let i = 0; i < 4; i++) {
     const u = dev.slotUsed[i];
@@ -9186,7 +9074,6 @@ setInterval(async () => {
     if (soundChanged) { updateBrowser(); await loadSteps(); sayK("ready"); return; }
     if (dump.p[pSlen()] !== oldLen) { $("steptables").dataset.len = ""; renderSteps(); }
     if (d.watch) return;                            /* steps come as STEP_CHANGED */
-    if (isDino()) return;
     /* steps are not in DUMP: follow them two at a time */
     const len = Math.max(1, Math.min(d.info.nstep, dump.p[pSlen()] || 16));
     for (let n = 0; n < 2; n++) {
@@ -9862,7 +9749,7 @@ function bkReport(e) {
 $("bk-save").addEventListener("click", () => op(async () => {
   try {
     const arc = await backupCapture(rq, dev.info, bkProgress("bkSaving"));
-    download(`${isDino()?'DINO-SYNTH':'SLOOP'}-backup-${today()}.json`, arc);
+    download(`SLOOP-backup-${today()}.json`, arc);
     sayK("bkSaved");
   } catch (e) { bkReport(e); } finally { $("bk-prog").hidden = true; }
 }));
@@ -10308,7 +10195,6 @@ async function lvSound(i, e, p) {         /* a sound for track i (PRESET acts on
 
 /* ---- notes: plain MIDI on the track's channel; the drum track: its 16 sounds as GM notes, or 36.. with DR MAP 1-16 */
 function lvChan(i) {
-  if (isDino()) { const ch=dinoMidiChannel(); return ch===null?{err:"lvNoChan"}:{ch}; }
   const g = LVG(), route = lvGv(g.route);
   if (route === 1) return { err: "lvClock" };
   if (route >= 2) return { ch: route - 2 };      /* IN = CH n: that channel, on the selected track */
@@ -11637,174 +11523,6 @@ window.addEventListener("keyup", (e) => { const up = lvDown.get(e.code); if (up)
 function lvLetGo() { for (const up of lvDown.values()) up(); lvDown.clear(); lvAllOff(); }
 window.addEventListener("blur", lvLetGo);
 document.addEventListener("visibilitychange", () => { if (document.hidden) lvLetGo(); });
-
-/* DINO performance uses the existing editor, librarian and sample tools. */
-const DINO_STYLES = ["OSCILLOSCOPE","SPECTRUM","SPECTROGRAM","LISSAJOUS","METERS","RING","TAPE","LCD","BOUNCE","ORBIT","WIRES","SLOOP","COSMIC DOG","FRACTAL HALO","NEBULA","CONWAY DREAM"];
-const DINO_SAVE_STATUS = ["","SAVE PENDING · release notes and let the effect tails finish.","SAVED","SAVE ERROR · previous saved copy retained.","FM6 BANK FULL · choose a replacement, or cancel."];
-const dinoHeld = new Map();
-let dinoPollBusy = false, dinoUiDevice = null, dinoBendHeld = null;
-const dinoRequest = (op,...args) => [CMD.DINO,[op,...args]];
-function dinoMidiChannel() {
-  const route=dev?.dump?.g[14]||0;
-  if(route===1) return null;
-  if(route>=2) return route-2;
-  const channel=dev?.dump?.g[dev?.dino?.mode===3?24:33];
-  return channel>=1&&channel<=16?channel-1:null;
-}
-async function dinoApplyState(d,s) {
-  const saved=s.status===2&&(d.dino?.status!==2||d.dinoBanksDirty);
-  const selected=s.mode===3?3:s.focus?2:0;
-  if(d.sel!==selected) needReload=true;
-  d.dino=s;d.sel=selected;
-  if(saved) {
-    d.dinoBanksDirty=true;
-    const rqd=(r,o)=>d.link.request(r,o);
-    const savedBank=await bank.list(rqd);
-    const savedFm6=d.info.proto>=9?parse[CMD.FM6_LIST](await rqd(req.fm6List())):null;
-    if(d!==dev) return;
-    d.bank=savedBank;d.fm6=savedFm6;d.dinoBanksDirty=false;
-    fm6Names(d);renderBank();renderLib();
-  }
-  dinoRender();
-  if(saved)dinoSlots();
-}
-async function dinoRead() {
-  const d=dev;
-  if(!d || !isDino()) return;
-  const s=parse[CMD.DINO](await rq(dinoRequest(0),{key:"dino-state"}));
-  if(d!==dev) return;
-  await dinoApplyState(d,s);
-}
-async function dinoWrite(opcode,...args) {
-  if(!isDino()) return;
-  await op(async()=>{
-    const d=dev;
-    const s=parse[CMD.DINO](await rq(dinoRequest(opcode,...args),{retries:0}));
-    if(d!==dev)return;
-    if(s.rc) throw new Error(s.rc===3?"Release notes before loading a Performance.":"DINO request rejected ("+s.rc+").");
-    if(opcode===3||opcode===6)d.dinoBanksDirty=true;
-    await dinoApplyState(d,s);
-    if(d!==dev)return;
-    if(opcode===1||opcode===2) await afterSoundChange();
-    if(opcode===2||opcode===3||opcode===5||opcode===6) await dinoRead();
-    dinoRender();
-  });
-}
-function dinoSet() {
-  dinoWrite(1,$("dino-mode").selectedIndex,+$("dino-split").value,+$("dino-focus").value,+$("dino-visual").value);
-}
-function dinoSlots() {
-  if(!dev?.dino) return;
-  const kind=+$("dino-kind").value, selected=+$("dino-slot").value||0;
-  $("dino-slot").replaceChildren(...Array.from({length:kind?4:32},(_,k)=>{
-    const p=kind?dev.dino.slots[k]:dev.bank?.slots?.[k];
-    return el("option",{value:k,text:`${kind?'PERF':'USER'} ${String(k+1).padStart(2,'0')} · ${p?.name||'EMPTY'}`});
-  }));
-  $("dino-slot").value=String(Math.min(selected,kind?3:31));
-}
-function dinoRender() {
-  if(!isDino()||!dev.dino) return;
-  const d=dev.dino;
-  if(dinoUiDevice!==dev) {
-    dinoUiDevice=dev;
-    $("dino-mix").replaceChildren(...[0,2].map((tr)=>{
-      const input=el("input",{type:"range",min:0,max:127,value:100,"aria-label":`${tr?'B':'A'} level`,id:`dino-level-${tr}`});
-      input.addEventListener("input",()=>op(async()=>{
-        await rq([CMD.TRACK_PARAM,[tr,0,...v14enc(+input.value)]],{key:`dino-level-${tr}`});
-        if(dev.mix?.tracks[tr])dev.mix.tracks[tr].level=+input.value;
-      }));
-      return el("label",{},`${tr?'B':'A'} level `,input);
-    }));
-  }
-  for(const [id,value] of [["dino-mode",d.mode],["dino-focus",d.focus],["dino-split",d.split],["dino-visual",d.style]]) {
-    const e=$(id);if(document.activeElement!==e)e.value=String(value);
-  }
-  for(const tr of [0,2]) {const e=$(`dino-level-${tr}`);if(e&&document.activeElement!==e)e.value=dev.mix?.tracks[tr]?.level??100;}
-  $("dino-state").textContent=DINO_SAVE_STATUS[d.status]||`${['SINGLE','LAYER','SPLIT','DRUMS'][d.mode]} · focus ${d.focus?'B':'A'} · split ${d.split}`;
-  $("dino-bank-replace").hidden=d.status!==4;
-  $("dino-bank-row").hidden=d.status!==4;
-  $("dino-mod").disabled=$("dino-bend").disabled=d.mode===3;
-  const signature=JSON.stringify(d.slots);
-  if($("dino-memories").dataset.signature!==signature){
-    $("dino-memories").dataset.signature=signature;
-    $("dino-memories").replaceChildren(...d.slots.map((p,k)=>{
-      const load=el("button",{text:"Load",disabled:p.kind!==1,onclick:()=>dinoWrite(2,k)});
-      const name=el("input",{type:"text",maxLength:12,value:p.name,"aria-label":`Performance ${k+1} name`,disabled:p.kind!==1});
-      const rename=el("button",{text:"Rename",disabled:p.kind!==1,onclick:()=>dinoWrite(5,k,...strEnc(name.value))});
-      return el("div",{class:"bar"},`PERF ${k+1}`,name,load,rename);
-    }));
-    dinoSlots();
-  }
-}
-function dinoKeyOff(token) {
-  const h=dinoHeld.get(token);if(!h)return;dinoHeld.delete(token);
-  try{h.output.send([0x80|h.ch,h.note,0]);}catch(e){}
-  if(MOCK)for(const tr of h.parts)localAudio?.note(tr,h.note,false);
-}
-async function dinoKeyOn(token,note) {
-  if(!isDino()||dinoHeld.has(token))return;
-  const d=dev.dino,ch=dinoMidiChannel();
-  if(ch===null)throw new Error("MIDI note input is disabled. Select a receive channel in Settings.");
-  const parts=d.mode===3?[3]:d.mode===1?[0,2]:d.mode===2?[note<d.split?0:2]:[d.focus?2:0];
-  const h={ch,note,parts,output:dev.output};dinoHeld.set(token,h);
-  dev.output.send([0x90|ch,note,100]);
-  if(MOCK && await startPreview() && dinoHeld.get(token)===h)for(const tr of parts)localAudio.note(tr,note,true);
-}
-function dinoAllOff(){for(const token of [...dinoHeld.keys()])dinoKeyOff(token);}
-function dinoWheel(cc,value) {const ch=dinoMidiChannel();if(isDino()&&ch!==null)dev.output.send([0xB0|ch,cc,value]);}
-function dinoBend(value) {
-  const b=Math.max(0,Math.min(16383,Math.round(value)+8192));
-  let owner=b===8192?dinoBendHeld:null;
-  if(!owner) {
-    if(!isDino())return;
-    const ch=dinoMidiChannel();if(ch===null)return;
-    owner={ch,output:dev.output};
-  }
-  if(b===8192) {
-    dinoBendHeld=null;
-    try{owner.output.send([0xE0|owner.ch,0,64]);}catch(e){}
-  } else {
-    owner.output.send([0xE0|owner.ch,b&127,b>>7]);dinoBendHeld=owner;
-  }
-}
-function dinoCenter(){ $("dino-bend").value=0;dinoBend(0); }
-for(const id of ["dino-mode","dino-focus","dino-split","dino-visual"])$(id).addEventListener("change",dinoSet);
-$("dino-visual").replaceChildren(...DINO_STYLES.map((text,value)=>el("option",{value,text})));
-$("dino-bank").replaceChildren(...Array.from({length:27},(_,i)=>el("option",{value:i,text:`B${i+1}`})));
-$("dino-kind").addEventListener("change",dinoSlots);
-$("dino-save").addEventListener("click",()=>{
-  if(!dev?.dino)return;const kind=+$("dino-kind").value,slot=+$("dino-slot").value;
-  const label=$("dino-slot").selectedOptions[0].textContent;
-  if(!confirm(`Save ${kind?'PERFORMANCE':'PATCH'} to ${label}? Any existing content in this destination will be replaced.`))return;
-  dinoWrite(3,kind,slot);
-});
-$("dino-cancel").addEventListener("click",()=>dinoWrite(4));
-$("dino-bank-replace").addEventListener("click",()=>{
-  const slot=+$("dino-bank").value;
-  if(confirm(`Replace FM6 B${slot+1}? Other patches referring to this bank slot will also change.`))dinoWrite(6,slot);
-});
-$("dino-panic").addEventListener("click",()=>{
-  dinoAllOff();$("dino-mod").value=0;dinoWheel(1,0);dinoCenter();
-  dinoWheel(64,0);dinoWheel(123,0);localAudio?.panic();
-});
-$("dino-mod").addEventListener("input",()=>dinoWheel(1,+$("dino-mod").value));
-$("dino-bend").addEventListener("input",()=>dinoBend(+$("dino-bend").value));
-for(const event of ["pointerup","pointercancel","lostpointercapture","blur","keyup"])$("dino-bend").addEventListener(event,dinoCenter);
-$("dino-keys").replaceChildren(...Array.from({length:27},(_,k)=>{
-  const note=53+k,black=[1,3,6,8,10].includes(note%12);
-  const b=el("button",{text:["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"][note%12]+(Math.floor(note/12)-1),"aria-label":`Play MIDI note ${note}`,style:black?'background:#16161c;border:1px solid #7666aa':'background:#b9b9c2;color:#101014'});
-  b.addEventListener("pointerdown",e=>{b.setPointerCapture(e.pointerId);dinoKeyOn(`dino:${k}`,note+12*(dev?.dino?.octave||0)).catch(report);});
-  for(const event of ["pointerup","pointercancel","lostpointercapture","blur"])b.addEventListener(event,()=>dinoKeyOff(`dino:${k}`));
-  b.addEventListener("keydown",e=>{if(["Enter"," "].includes(e.key)&&!e.repeat){e.preventDefault();dinoKeyOn(`dino:${k}`,note+12*(dev?.dino?.octave||0)).catch(report);}});
-  b.addEventListener("keyup",()=>dinoKeyOff(`dino:${k}`));return b;
-}));
-window.addEventListener("blur",()=>{dinoAllOff();if(isDino())dinoCenter();});
-window.addEventListener("pagehide",()=>{dinoAllOff();if(isDino())dinoCenter();});
-document.addEventListener("visibilitychange",()=>{if(document.hidden){dinoAllOff();if(isDino())dinoCenter();}});
-setInterval(async()=>{
-  if(!isDino()||busy||dinoPollBusy||document.hidden||!dev.link.idle)return;
-  dinoPollBusy=true;try{await dinoRead();}catch(e){report(e);}finally{dinoPollBusy=false;}
-},1000);
 
 $("connect").addEventListener("click", () => {
   if (dev) { wantConnected = false; disconnect(); } else connect();

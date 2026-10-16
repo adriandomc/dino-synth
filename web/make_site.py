@@ -34,7 +34,7 @@ HERE = Path(__file__).resolve().parent
 ONLINE = "https://isod89.github.io/sloop-fm1/"                 # (the offline editor's links)
 
 
-def offline_editor(html, dino=False):
+def offline_editor(html):
     """editor.html as one file for the disk: the icon font inlined, the download link out, the relative links online"""
     font = base64.b64encode((HERE / "fukiai.ttf").read_bytes()).decode()
     for a, b in (('url("fukiai.ttf")', 'url(data:font/ttf;base64,' + font + ')'),
@@ -50,16 +50,13 @@ def offline_editor(html, dino=False):
         html, n = re.subn(pat, "", html, flags=re.S)
         if n != 1:
             raise SystemExit(f"editor.html must contain {what} once; update make_site.py")
-    if dino:
-        html = html.replace(ONLINE + 'webapp/installer/', 'https://github.com/adriandomc/dino-synth/blob/dino-synth/DINO.md#instalación-y-recuperación')
-        html = html.replace(ONLINE + 'webapp/editor/FUKIAI-LICENSE.txt', 'https://github.com/adriandomc/dino-synth/blob/dino-synth/web/FUKIAI-LICENSE.txt')
     return html
 
 
 ICONS = ("icon-192.png", "icon-512.png", "icon-maskable-512.png")
 
 
-def app_files(out, version, fw_name, dino=False):
+def app_files(out, version, fw_name):
     """webapp/: the manifest, the icons and sw.js with the list of what it keeps (relative to webapp/) and a
     stamp of their contents, so any change makes a new sw.js and the browser takes the new site"""
     app = out / "webapp"
@@ -73,8 +70,6 @@ def app_files(out, version, fw_name, dino=False):
                   {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
                   {"src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}],
     }
-    if dino:
-        manifest.update(name="DINO SYNTH", short_name="DINO SYNTH", description="DINO SYNTH for M-VAVE FM-1: live synthesizer, editor and installer")
     (app / "sloop.webmanifest").write_text(json.dumps(manifest, indent=1) + "\n", encoding="utf-8")
     keep = {"installer/": app / "installer" / "index.html", "editor/": app / "editor" / "index.html",
             "../firmware/" + fw_name: out / "firmware" / fw_name, "sloop.webmanifest": app / "sloop.webmanifest"}
@@ -109,7 +104,7 @@ def product_of(raw):
     return "".join(chr((m - i - 1) & 0xFF) for i in range(BLOCKS) if (m := raw[i * BLK + KEEP]) != 0x7D)
 
 
-def main(pkg, version, out, dino=False):
+def main(pkg, version, out):
     pkg, out = Path(pkg), Path(out)
     raw = pkg.read_bytes()
     product = product_of(raw)
@@ -120,7 +115,7 @@ def main(pkg, version, out, dino=False):
     html = (HERE / "index_pkg.html").read_text(encoding="utf-8")
     lib = strip_module((HERE / "fm1pkg.js").read_text(encoding="utf-8")) + "\n" + \
         strip_module((HERE / "fm1ota.js").read_text(encoding="utf-8"))
-    name = f"{'dino-synth' if dino else 'sloop'}-{re.sub(r'[^A-Za-z0-9.-]', '-', version)}.fwsc"
+    name = f"sloop-{re.sub(r'[^A-Za-z0-9.-]', '-', version)}.fwsc"
     meta = json.dumps({"version": version, "product": product, "pkg": "../../firmware/" + name,
                        "sha256": hashlib.sha256(raw).hexdigest()})   # the page checks the download against it
     for mark in ("/*LIB*/", "/*META*/"):
@@ -128,13 +123,7 @@ def main(pkg, version, out, dino=False):
             raise SystemExit(f"index_pkg.html must contain {mark} once; update make_site.py")
     html = html.replace("/*LIB*/", lib).replace("/*META*/", meta)
     logo = HERE.parent / "assets" / "logo" / "sloop-logo.svg"     # the SLOOP logo, inline
-    html = html.replace("<!--LOGO-->", '<b style="font-size:28px;color:#40c936">DINO SYNTH</b>' if dino else logo.read_text(encoding="utf-8") if logo.exists() else "<b>SLOOP</b>")
-    if dino:
-        html = html.replace('SLOOP', 'DINO SYNTH').replace('edit sounds and sequences from the computer', 'edit sounds, A/B, split, samples and backups')
-        html = re.sub(r'<p class="lead">.*?</p>', '<p class="lead">A live synthesizer: SINGLE, LAYER, SPLIT and DRUMS, twelve engines, dry factory sounds and sixteen audio reactive visualizers.</p>', html, count=1, flags=re.S)
-        html = re.sub(r'<div class="tiles">.*?</div>\s*<p data-t="intro">', '<div class="tiles"><div class="tile"><b>12</b><span>synthesis engines</span></div><div class="tile"><b>A/B</b><span>layer and split</span></div><div class="tile"><b>16</b><span>visual styles</span></div><div class="tile"><b>4</b><span>performance memories</span></div></div><p data-t="intro">', html, count=1, flags=re.S)
-        html = html.replace('DINO SYNTH is based on Felucca', 'DINO SYNTH is based on Sloop 2.7 by isod89 and Felucca')
-        html = html.replace('https://github.com/hugelton/Felucca', 'https://github.com/adriandomc/dino-synth/tree/dino-synth').replace('github.com/hugelton/Felucca', 'github.com/adriandomc/dino-synth')
+    html = html.replace("<!--LOGO-->", logo.read_text(encoding="utf-8") if logo.exists() else "<b>SLOOP</b>")
     inst, ed, fw = out / "webapp" / "installer", out / "webapp" / "editor", out / "firmware"
     for d in (inst, ed, fw):
         d.mkdir(parents=True, exist_ok=True)
@@ -149,7 +138,7 @@ def main(pkg, version, out, dino=False):
         notes = HERE / "beta_banner.html"
         banner = notes.read_text(encoding="utf-8") if notes.exists() else "<p><b>BETA</b></p>"
     html = html.replace("<!--BANNER-->", banner)
-    for old in list(fw.glob("felucca-*.fwsc")) + list(fw.glob("sloop-*.fwsc")) + list(fw.glob("dino-synth-*.fwsc")):
+    for old in list(fw.glob("felucca-*.fwsc")) + list(fw.glob("sloop-*.fwsc")):   # one package: the current one
         old.unlink()
     shutil.copy(pkg, fw / name)
     ed_html = (HERE / "editor.html").read_text(encoding="utf-8")
@@ -157,7 +146,7 @@ def main(pkg, version, out, dino=False):
     if ed_html.count('download="sloop-editor.html"') != 1 or html.count('download="sloop-editor.html"') != 1:
         raise SystemExit('editor.html and index_pkg.html must link download="sloop-editor.html" once; update make_site.py')
     (ed / "index.html").write_text(ed_html.replace('download="sloop-editor.html"', dl), encoding="utf-8")
-    (ed / "sloop-editor.html").write_text(offline_editor(ed_html, dino), encoding="utf-8")
+    (ed / "sloop-editor.html").write_text(offline_editor(ed_html), encoding="utf-8")
     (inst / "index.html").write_text(html.replace('download="sloop-editor.html"', dl), encoding="utf-8")
     for f in ("fukiai.ttf", "FUKIAI-LICENSE.txt"):
         if (HERE / f).exists():
@@ -170,16 +159,16 @@ def main(pkg, version, out, dino=False):
         shutil.copy(dsp, ed / dsp.name)
     elif (ed / dsp.name).exists():
         (ed / dsp.name).unlink()  # never serve an old audio build as the current one
-    app_files(out, version, name, dino)
+    app_files(out, version, name)
     (out / "index.html").write_text(
-        '<!doctype html><meta charset="utf-8"><title>' + ('DINO SYNTH' if dino else 'SLOOP') + '</title>'
+        '<!doctype html><meta charset="utf-8"><title>SLOOP</title>'
         '<meta http-equiv="refresh" content="0; url=webapp/installer/">'
-        '<a href="webapp/installer/">Installer</a>\n', encoding="utf-8")
+        '<a href="webapp/installer/">SLOOP installer</a>\n', encoding="utf-8")
     print(f"site: {out}: webapp/installer ({len(html)} B), webapp/editor, firmware/{name} ({len(raw)} B, {product})")
 
 
 if __name__ == "__main__":
-    args = [a for a in sys.argv[1:] if a not in ("--studio-guide", "--beta", "--dino")]
+    args = [a for a in sys.argv[1:] if a not in ("--studio-guide", "--beta")]
     if len(args) != 3:
         sys.exit(__doc__)
-    main(*args, dino="--dino" in sys.argv)
+    main(*args)

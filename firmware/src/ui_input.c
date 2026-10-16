@@ -404,15 +404,6 @@ UI_SMALL static void project_new(void)
 
 UI_SMALL static void edit_param(uint32_t slot, int32_t steps)
 {
-#if FELUCCA_DINO
-    int16_t *value;
-    const param_desc_t *desc = page_desc(cur_page(), slot, &value);
-    if (desc && value && desc->max > desc->min) {
-        *value = (int16_t)clamp(*value + accel(EN_K1 + slot, steps, desc->names ? 0 : desc->max - desc->min), desc->min, desc->max);
-        ml_knob(TSEL, cur_page()->id[slot]);
-    }
-    return;
-#endif
     int16_t *vp;
     const page_t *pg = cur_page();
     const param_desc_t *d;
@@ -680,7 +671,6 @@ UI_SMALL static uint32_t btn_hold(uint32_t *t0, uint32_t label, uint32_t now, in
 }
 
 /* a layer button tapped (pressed and let go, nothing touched): its pages, as before the layers */
-#if !FELUCCA_DINO
 UI_SMALL static void layer_tap(uint32_t layer)
 {
     switch (layer) {
@@ -878,7 +868,6 @@ UI_SMALL static int layers_input(uint32_t note_edges, uint32_t *pressed, uint32_
     return 1;
 }
 
-#endif
 /* the REC screen while armed (ui_studio.c rec_screen_draw): KNOB 1 MODE free / tempo (an empty
  * project), KNOB 2 the length of the selected track (1, 2 or 4 bars), KNOB 3 START note / count,
  * KNOB 4 QUANT on / off (2.7, seq.c rec_quant_off); MODE, START and QUANT are settings of the FM-1
@@ -919,7 +908,6 @@ UI_SMALL static void rec_knobs(void)
 /* REC: acts on the press (no lag). Held 0.7 s the press is undone and a ring fills: held on to the
  * end, the selected track is cleared (EDIT + OCT- brings it back); let go before, nothing happens.
  * (SAVE is the SONG layer: ui_layers.c; tapped, layer_tap) */
-#if !FELUCCA_DINO
 UI_SMALL static void holds_input(uint32_t pressed, uint32_t now_ms)
 {
     static uint8_t prev_rec, prev_wait, eaten, rec_on, save_on;   /* *_on: pressed, *_t0 its time */
@@ -971,7 +959,6 @@ UI_SMALL static void holds_input(uint32_t pressed, uint32_t now_ms)
     (void)sb, (void)save_down, (void)save_on, (void)save_t0;   /* (SAVE is a layer now: ui_layers.c) */
 }
 
-#endif
 /* (2.7) REMOTE: the buttons held over MIDI (seq.c remote_cc) as the panel's (fm1_input.h fm1_remote_btn, read as closed);
  * one let go is released once the debounce has seen it down. REMOTE OFF: none */
 UI_SMALL static void remote_poll(void)
@@ -1006,9 +993,6 @@ UI_SMALL static void remote_poll(void)
 
 UI_SMALL static void ui_input(void)
 {
-#if FELUCCA_DINO
-    dino_ui_input();
-#else
     uint32_t pressed = fm1_input_edges(0), notes = fm1_input_note_edges(), now = fm1_ticks(), id, b, k;
     uint32_t home = btn_hold(&ui.home_t0, B_HOME, now, 1);
     int32_t s;
@@ -1184,7 +1168,6 @@ UI_SMALL static void ui_input(void)
             edit_param(k, s);
         }
     }
-#endif
 }
 
 /* ---------------------------------------------------- panel setup --- */
@@ -1246,9 +1229,6 @@ UI_SMALL static void panel_setup(void)
         fm1_enc_take(e);
     }
     panel.magic = PANEL_MAGIC;
-#if FELUCCA_DINO
-    dino_panel_bind();
-#endif
     lcd_fill(0, 0, 240, 240, C_BLACK);
     layers_init();
     ui.force = 1;

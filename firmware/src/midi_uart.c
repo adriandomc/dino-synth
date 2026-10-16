@@ -64,9 +64,6 @@ static void um_byte(uint32_t b)
     {
         uint32_t d1 = um.need == 2u ? um.d0 : b, d2 = um.need == 2u ? b : 0u;
         uint32_t pkt = (um.st >> 4) | (uint32_t)um.st << 8 | d1 << 16 | d2 << 24;
-#if FELUCCA_DINO
-        pkt |= 0x10u;                              /* live owners distinguish TRS from USB */
-#endif
         um.got = 0;
         if (mi_w - mi_r < MQ) {
             midi_in_q[mi_w % MQ] = pkt;

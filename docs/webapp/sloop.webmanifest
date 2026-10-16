@@ -1,13 +1,13 @@
 {
- "name": "DINO SYNTH",
- "short_name": "DINO SYNTH",
+ "name": "SLOOP",
+ "short_name": "SLOOP",
  "id": "editor/",
  "start_url": "editor/",
  "scope": "./",
  "display": "standalone",
  "background_color": "#000000",
  "theme_color": "#000000",
- "description": "DINO SYNTH for M-VAVE FM-1: live synthesizer, editor and installer",
+ "description": "SLOOP for the M-VAVE FM-1: the editor and the installer, also without internet",
  "icons": [
   {
    "src": "icon-192.png",

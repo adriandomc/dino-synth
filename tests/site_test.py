@@ -76,18 +76,6 @@ try:
     make_site.main(tmp / "p.fwsc", "9.9", tmp / "site2")
     other = (tmp / "site2" / "webapp" / "sw.js").read_text(encoding="utf-8").split('const STAMP = "')[1].split('"')[0]
     check("sw.js: the same site, the same stamp; a file changed, a new one", stamp == same and stamp != other)
-    make_site.main(tmp / "p.fwsc", "0.1", tmp / "dino", dino=True)
-    dino = tmp / "dino"
-    installer = (dino / "webapp/installer/index.html").read_text(encoding="utf-8")
-    manifest = json.loads((dino / "webapp/sloop.webmanifest").read_text(encoding="utf-8"))
-    offline = (dino / "webapp/editor/sloop-editor.html").read_text(encoding="utf-8")
-    check("DINO: own firmware, identity, live controls and branding",
-          (dino / "firmware/dino-synth-0.1.fwsc").exists() and "DINO SYNTH installer" in installer
-          and "A live synthesizer:" in installer and "A groovebox" not in installer
-          and manifest["name"] == "DINO SYNTH")
-    check("DINO offline editor links its own installation guide",
-          "github.com/adriandomc/dino-synth/blob/dino-synth/DINO.md" in offline
-          and make_site.ONLINE not in offline)
 finally:
     shutil.rmtree(tmp, ignore_errors=True)
 print("site:", "FAILED" if bad else "offline editor and offline site test passed")

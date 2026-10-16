@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
-"""Package the actual 240x240 LCD frames emitted by tests/dino_vis_test.c."""
+"""Package the actual 240x240 LCD frames emitted by tests/dinoperro_vis_test.c."""
 from pathlib import Path
 import argparse
 from PIL import Image, ImageDraw
@@ -12,8 +12,8 @@ def main():
     args = parser.parse_args()
     names = ("COSMIC DOG", "HALO", "NEBULA", "CONWAY DREAM")
     width = 240 * len(names)
-    scenarios = ((7, "IDLE"), (15, "A / LOW NOTE"), (23, "B / HIGH NOTE"),
-                 (31, "A + B"), (39, "REDUCED DETAIL"), (47, "RELEASE"))
+    scenarios = ((7, "IDLE"), (15, "TRACK 1 / LOW NOTE"), (23, "TRACK 3 / HIGH NOTE"),
+                 (31, "TRACKS 1 + 3"), (39, "REDUCED DETAIL"), (47, "RELEASE"))
     frames = [[Image.open(args.directory / f"cosmic-{style}-{frame:02}.ppm").convert("RGB")
                for frame in range(48)] for style in range(len(names))]
     assert all(frame.size == (240, 240) for sequence in frames for frame in sequence)

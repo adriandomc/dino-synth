@@ -580,9 +580,6 @@ UI_SMALL static void proj_fetch(uint32_t slot)
 static const char *const SEC_NAME[4] = {"A", "B", "C", "D"};   /* (2.7: the slots named as the song's sections) */
 UI_SMALL static void project_save(uint32_t slot)
 {
-#if FELUCCA_DINO
-    return;
-#endif
     project_t *p = &proj_slot[slot & 3u];
 #if FELUCCA_ARRANGER
     if (song.playing || transport_req) { ui_message("STOP BEFORE SAVE"); return; }
@@ -606,9 +603,6 @@ UI_SMALL static void project_save(uint32_t slot)
  * so song mode still plays. Stopped only: a flash erase stops the audio ~50 ms */
 UI_SMALL static void project_erase(uint32_t slot)
 {
-#if FELUCCA_DINO
-    return;
-#endif
     slot &= 3u;
 #if FELUCCA_ARRANGER
     if (song.playing || transport_req) { ui_message("STOP BEFORE ERASE"); return; }
@@ -626,9 +620,9 @@ UI_SMALL static void project_erase(uint32_t slot)
     fm1_irq_off();
     memset(&proj_slot[slot], 0, sizeof proj_slot[slot]);
     sec_dirty &= (uint8_t)~(1u << slot);
-#if FELUCCA_ARRANGER
     if (live_sec == (int8_t)slot)
         live_sec = -1;
+#if FELUCCA_ARRANGER
     if (arr_drop_scene(&arrangement, slot))
         song_dirty = 1;                                     /* (saved with the settings, when quiet) */
 #endif
@@ -639,9 +633,6 @@ UI_SMALL static void project_erase(uint32_t slot)
 /* a project into the working one: the transport stops, everything sounding is released */
 UI_SMALL static void project_apply(const project_t *p)
 {
-#if FELUCCA_DINO
-    return;
-#endif
     uint32_t k;
     transport_req = 2;
     panic_req = (1u << NTRK) - 1u;
@@ -661,9 +652,6 @@ UI_SMALL static void project_apply(const project_t *p)
 
 UI_SMALL static void project_load(uint32_t slot)
 {
-#if FELUCCA_DINO
-    return;
-#endif
     project_t *p = &proj_slot[slot & 3u];
 #if FELUCCA_ARRANGER
     if (song.playing || transport_req) { ui_message("STOP BEFORE LOAD"); return; }
@@ -703,9 +691,6 @@ UI_SMALL static int audio_quiet(void)
 
 UI_SMALL static void autosave_tick(void)                /* main loop */
 {
-#if FELUCCA_DINO
-    return;
-#endif
 #if FELUCCA_FLASH
     uint32_t h, now = fm1_ms;
     if (!flash_ok || song.playing || transport_req || rec_wait || ft_on || ui.menu ||
@@ -726,9 +711,6 @@ static uint8_t drch_seed;                           /* a settings object as 2.5 
                                                      * project's then (autosave_resume takes it from a 2.5 autosave) */
 UI_SMALL static void autosave_resume(void)              /* power-on: the project as it was left (felucca_init) */
 {
-#if FELUCCA_DINO
-    return;
-#endif
 #if FELUCCA_FLASH
     project_t *q = &autosave_buf;
     int n;
@@ -842,7 +824,6 @@ UI_SMALL static void persist_boot(void)                    /* before settings_in
                 panel = old;
         }
     }
-#if !FELUCCA_DINO
     {   /* projects: fill empty RAM slots from flash, so the slot list is right after power-on. A slot
          * still valid in RAM (a warm reset: an update, UPDATE MODE, a crash) may never have reached
          * flash (a live section stored while playing): marked to be written when quiet */
@@ -856,7 +837,6 @@ UI_SMALL static void persist_boot(void)                    /* before settings_in
                     sec_dirty |= (uint8_t)(1u << i);
             }
     }
-#endif
     dsu_boot();                                    /* SLOOP 2.5: the SYN kits (after the settings) */
     up_boot();                                     /* user presets */
     fm6_bank_boot();                               /* the FM6 patch bank (fm6_bank.c) */
@@ -994,9 +974,6 @@ UI_SMALL static void persist_fill(persist_t *p)              /* the settings as 
 
 UI_SMALL static void settings_save(void)
 {
-#if FELUCCA_DINO
-    if (!dino_audio_quiet() || dino_save_status() == DINO_SAVE_PENDING) { settings_later = 1; return; }
-#endif
 #if FELUCCA_FLASH
     persist_t p;
     if (!flash_ok)
@@ -1010,9 +987,6 @@ UI_SMALL static void settings_save(void)
     }
     if (settings_write(&p) == 0)
         persist_saved = p;
-#if FELUCCA_DINO
-    else settings_later = 1;
-#endif
 #endif
 }
 
@@ -1042,9 +1016,6 @@ UI_SMALL static int panel_valid(const panel_t *q)           /* a permutation of 
 UI_SMALL static uint32_t settings_restore(const void *raw, uint32_t n)
 {
     persist_t p;
-#if FELUCCA_DINO
-    if (!dino_audio_quiet() || dino_save_status() == DINO_SAVE_PENDING) return 3;
-#endif
     if (n != sizeof p && n != PERSIST_SIZE_V22)
         return 2;
     memset(&p, 0, sizeof p);
@@ -1063,14 +1034,7 @@ UI_SMALL static uint32_t settings_restore(const void *raw, uint32_t n)
     settings.palette = p.palette;
     settings.lowcut = p.lowcut;
     settings.zoom = p.zoom;
-#if FELUCCA_DINO
-    {
-        uint32_t irq = fm1_icfg();
-        fm1_irq_off(); panel = p.panel; dino_panel_bind(); fm1_irq_restore(irq);
-    }
-#else
     panel = p.panel;
-#endif
 #if FELUCCA_ARRANGER
     arrangement = p.arrangement;
 #endif
@@ -1087,7 +1051,6 @@ UI_SMALL static uint32_t settings_restore(const void *raw, uint32_t n)
 /* slot 0..3 (n 0: empty), or 4: the working project (loaded now) */
 UI_SMALL static uint32_t project_restore(uint32_t slot, const void *raw, uint32_t n)
 {
-    if (FELUCCA_DINO) return 2;
     if (song.playing || transport_req)
         return 3;
     if (slot < 4u && !n) {
@@ -1129,9 +1092,6 @@ UI_SMALL static void arrangement_save(void)
  * stops the audio for ~50 ms); a song recorded with SONG REC is saved the same way. */
 UI_SMALL static void section_store(uint32_t s)
 {
-#if FELUCCA_DINO
-    return;
-#endif
     s &= 3u;
     fm1_irq_off();                                      /* (the audio ISR may be applying a section) */
     proj_capture(&proj_slot[s]);
@@ -1141,20 +1101,12 @@ UI_SMALL static void section_store(uint32_t s)
 }
 UI_SMALL static void section_load(uint32_t s)                    /* stopped: the section is the loop now */
 {
-#if FELUCCA_DINO
-    return;
-#endif
     s &= 3u;
     project_apply(&proj_slot[s]);
     live_sec = (int8_t)s;
 }
 UI_SMALL static void sections_write(void)                        /* the dirty sections and song into flash */
 {
-#if FELUCCA_DINO
-    sec_dirty = 0;
-    if (song_dirty || fav_dirty) { song_dirty = 0; settings_save(); }
-    return;
-#endif
     uint32_t i;
 #if FELUCCA_FLASH
     if (flash_ok)
@@ -1174,9 +1126,6 @@ UI_SMALL static void sections_write(void)                        /* the dirty se
  * whatever is only in RAM goes to flash now: the live sections, the song, the working project */
 UI_SMALL static void persist_flush_now(void)
 {
-#if FELUCCA_DINO
-    return;
-#endif
     sections_write();
 #if FELUCCA_FLASH
     if (flash_ok && !arrangement_clock.running) {     /* (a song playing: the tracks hold a section) */

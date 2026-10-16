@@ -34,7 +34,7 @@ enum { ED_INFO = 1, ED_GET, ED_SET, ED_DUMP, ED_DESC, ED_STEP_GET, ED_STEP_SET, 
 /* v10 (SLOOP 2.5): DSYN_LIST .. DSYN_PLAY = 72..76, editor_dsyn.c; backup object 9 = the SYN kits */
 /* v11 (SLOOP 2.7): backup object 11 = your theme (gfx.c theme_t), the editor's Theme page */
 /* v12 (SLOOP 2.7): LIVE = 77, editor_live.c: the LIVE page (transport, sections, mix keys, punch-in FX, REC, undo) */
-#define ED_PROTO (FELUCCA_DINO ? 13u : 12u)                                   /* the protocol version INFO ends with */
+#define ED_PROTO 12u                                   /* the protocol version INFO ends with */
 
 static uint8_t ed_out[600];
 static uint32_t ed_n;
@@ -416,11 +416,7 @@ UI_SMALL static const uint8_t *ed_bk_obj(uint32_t id, uint32_t *len)   /* 0 = no
 {
     *len = 0;
     if (id == 0u) {
-#if FELUCCA_DINO
-        *len = sizeof(dino_performance_t);
-#else
         *len = sizeof(project_t);
-#endif
         return ED_BK_RAW;
     }
     if (id == 1u) {
@@ -428,13 +424,8 @@ UI_SMALL static const uint8_t *ed_bk_obj(uint32_t id, uint32_t *len)   /* 0 = no
         return (const uint8_t *)&ed_bk_set;
     }
     if (id >= 2u && id <= 5u) {
-#if FELUCCA_DINO
-        const dino_performance_t *p = (const dino_performance_t *)&proj_slot[id - 2u];
-        if (dino_store_valid(p, sizeof *p, DINO_PERF_MAGIC)) *len = sizeof *p;
-        else if (proj_ok(&proj_slot[id - 2u])) *len = sizeof proj_slot[0];
-#else
-        if (project_used(id - 2u)) *len = sizeof proj_slot[0];
-#endif
+        if (project_used(id - 2u))
+            *len = sizeof proj_slot[0];
         return (const uint8_t *)&proj_slot[id - 2u];
     }
     if (id == 6u || id == 7u) {                           /* a user preset bank, read where it is (upreset.c) */
@@ -479,13 +470,7 @@ static const uint8_t ED_BK_IDS[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 32, 33
                                                                                       * 10: MIDI LEARN (2.6) */
 
 /* a flash erase silences the audio for ~50 ms and stalls USB: only while stopped (as the panel) */
-UI_SMALL static uint32_t ed_flash_busy(void) {
-#if FELUCCA_DINO
-    return !dino_audio_quiet() || dino_save_status() == DINO_SAVE_PENDING || dino_save_status() == DINO_SAVE_BANK_FULL || ed_bk_put;
-#else
-    return song.playing || transport_req;
-#endif
-}
+UI_SMALL static uint32_t ed_flash_busy(void) { return song.playing || transport_req; }
 
 UI_SMALL static uint32_t ed_bk_commit(void)
 {
@@ -496,11 +481,7 @@ UI_SMALL static uint32_t ed_bk_commit(void)
     if (id == 1u)
         return settings_restore(raw, n);
     if (id <= 5u)
-#if FELUCCA_DINO
-        return dino_restore(id == 0u ? 4u : id - 2u, raw, n);
-#else
         return project_restore(id == 0u ? 4u : id - 2u, raw, n);
-#endif
     if (id == 6u || id == 7u) {                           /* a user preset bank (n 0: empty) */
         const up_bank_t *b = (const up_bank_t *)raw;
         if (ed_flash_busy())
@@ -591,18 +572,11 @@ UI_SMALL static int ed_backup(uint32_t cmd, const uint8_t *a, uint32_t na)   /* 
     if (cmd == ED_BK_LIST) {
         rc = !flash_ok ? 4u : 0u;
         if (!rc) {
-#if FELUCCA_DINO
-            dino_capture((dino_performance_t *)ED_BK_RAW, DINO_AUTO_MAGIC);
-#else
-            proj_capture((project_t *)ED_BK_RAW);
-#endif           /* the working project, as it is now */
+            proj_capture((project_t *)ED_BK_RAW);           /* the working project, as it is now */
             persist_fill(&ed_bk_set);
             midi_part_fill(ed_bk_ml);
             ed_bk_valid = 1;
             ed_bk_put = 0;
-#if FELUCCA_DINO
-            dino_restore_busy = 0;
-#endif
         }
         ed_b(rc);
         ed_b(rc ? 0u : (uint32_t)sizeof ED_BK_IDS - (ed_bk_obj(10u, &len) && !len ? 1u : 0u) -
@@ -648,9 +622,6 @@ UI_SMALL static int ed_backup(uint32_t cmd, const uint8_t *a, uint32_t na)   /* 
                     ed_bk_crc = ed_bk_r32(a + 7);
                     ed_bk_pos = 0;
                     ed_bk_ms = fm1_ms;
-#if FELUCCA_DINO
-                    dino_restore_busy = 1; dino_restore_ms = fm1_ms;
-#endif
                     rc = 0;
                 }
             }
@@ -662,26 +633,17 @@ UI_SMALL static int ed_backup(uint32_t cmd, const uint8_t *a, uint32_t na)   /* 
                 memcpy(ED_BK_RAW + ed_bk_pos, ed_smp_buf, k);
                 ed_bk_pos += k;
                 ed_bk_ms = fm1_ms;
-#if FELUCCA_DINO
-                dino_restore_ms = fm1_ms;
-#endif
                 rc = 0;
             }
         } else if (op == 2u && na == 2u) {                /* commit */
-            ed_bk_put = 0;
-#if FELUCCA_DINO
-            dino_restore_busy = 0;
-#endif
             rc = ed_bk_commit();
+            ed_bk_put = 0;
             if (!rc) {
                 sync_reload = 1;
                 ui.force = 1;
             }
         } else if (op == 3u && na == 2u) {                /* abort */
             ed_bk_put = 0;
-#if FELUCCA_DINO
-            dino_restore_busy = 0;
-#endif
             rc = 0;
         }
         ed_b(op & 127u);
@@ -708,8 +670,6 @@ UI_SMALL static int ed_backup(uint32_t cmd, const uint8_t *a, uint32_t na)   /* 
 
 #include "editor_live.c"                              /* v12: the LIVE page (77) */
 
-#include "editor_dino.c"
-
 UI_SMALL static void ed_handle(const uint8_t *f, uint32_t n)   /* f: the bytes between F0 and F7 */
 {
     uint32_t cmd = f[3], i;
@@ -718,14 +678,6 @@ UI_SMALL static void ed_handle(const uint8_t *f, uint32_t n)   /* f: the bytes b
     int16_t *vp;
     const param_desc_t *d;
     ed_begin(cmd);
-#if FELUCCA_DINO
-    if (cmd == ED_DINO) { ed_dino(a, na); ed_send(); return; }
-    if (cmd == ED_PROJECT || cmd == ED_STEP_GET || cmd == ED_STEP_SET || cmd == ED_TRACK_STEP ||
-        cmd == ED_DRUM_STEP || (cmd >= ED_LOCK_GET && cmd <= ED_FILL_SET)) {
-        ed_b(6); ed_send(); return;                    /* Retired commands cannot enter groovebox handlers. */
-    }
-    if (cmd == ED_TRACK_PARAM && na >= 2u && ed_dino_retired(0, a[1])) { ed_b(6); ed_send(); return; }
-#endif
     if (ed_backup(cmd, a, na)) {                           /* v6: backup / restore */
         ed_send();
         return;
@@ -745,11 +697,7 @@ UI_SMALL static void ed_handle(const uint8_t *f, uint32_t n)   /* f: the bytes b
         ed_live(a, na);
         break;
     case ED_INFO:
-#if FELUCCA_DINO
-        ed_str(FELUCCA_VERSION, 24);
-#else
         ed_str("FELUCCA " FELUCCA_VERSION, 24);
-#endif
         ed_b(NENGINES);
         ed_b(P_COUNT);
         ed_b(G_COUNT);
@@ -764,11 +712,7 @@ UI_SMALL static void ed_handle(const uint8_t *f, uint32_t n)   /* f: the bytes b
     case ED_SET:
         if (na < 2u || !(d = ed_desc(a[0], a[1], &vp)))
             return;
-        if (cmd == ED_SET && na >= 4u
-#if FELUCCA_DINO
-            && !ed_dino_retired(a[0], a[1])
-#endif
-            ) {
+        if (cmd == ED_SET && na >= 4u) {
             if (a[0] == 1 && a[1] == G_ENGSEL) {          /* engine change: the safe path */
                 set_engine((uint32_t)clamp(ed_rv(a + 2), 0, NENGINES - 1));
             } else if (d->max > d->min) {
@@ -863,7 +807,7 @@ UI_SMALL static void ed_handle(const uint8_t *f, uint32_t n)   /* f: the bytes b
         uint32_t rc;
         if (na < 1u || a[0] >= SMP_USER_SLOTS || !flash_ok)
             return;
-        rc = FELUCCA_DINO && ed_flash_busy() ? 3u : ed_smp_erase(a[0], cmd == ED_SMP_ERASE) ? 1u : 0u;
+        rc = ed_smp_erase(a[0], cmd == ED_SMP_ERASE) ? 1u : 0u;
         ed_smp_open[a[0]] = (uint8_t)(cmd == ED_SMP_BEGIN && !rc);
         ed_b(a[0]);
         ed_b(rc);
@@ -877,7 +821,6 @@ UI_SMALL static void ed_handle(const uint8_t *f, uint32_t n)   /* f: the bytes b
         len = ed_unpack7(a + 4, na - 4u, ed_smp_buf, 256u);
         if (off < SMP_USER_DATA || (off & 0xFFu) || !len || off + len > SMP_USER_SIZE)
             rc = 1;
-        else if (FELUCCA_DINO && ed_flash_busy()) rc = 3;
         else if (usr_nz[a[0]] || !ed_smp_open[a[0]])
             rc = 4;                                        /* slot in use: SMP_BEGIN first (voices read it) */
         else {
@@ -897,7 +840,7 @@ UI_SMALL static void ed_handle(const uint8_t *f, uint32_t n)   /* f: the bytes b
         if (na < 2u || a[0] >= SMP_USER_SLOTS || !flash_ok)
             return;
         ed_b(a[0]);
-        ed_b(FELUCCA_DINO && ed_flash_busy() ? 3u : (uint32_t)ed_smp_end(a[0], a + 1, na - 1u));
+        ed_b((uint32_t)ed_smp_end(a[0], a + 1, na - 1u));
         break;
     case ED_SMP_INFO:                                      /* -> per slot: zones (0 = empty), name, data KiB */
         ed_b(SMP_USER_SLOTS);
@@ -989,7 +932,7 @@ UI_SMALL static void ed_handle(const uint8_t *f, uint32_t n)   /* f: the bytes b
         if (a[0] < UP_SLOTS && (!n0 || up_name_ok(a + 1, n0))) {   /* "" = automatic name */
             for (i = 0; i < n0; i++)
                 nm[i] = (char)a[1 + i];
-            int r = !FELUCCA_DINO && ed_flash_busy() ? -3 : up_store(a[0], nm);
+            int r = ed_flash_busy() ? -3 : up_store(a[0], nm);
             rc = r == -3 ? 3u : r == 1 ? 1u : r ? 2u : 0u;   /* 1: the drum track is selected; 3: stop first */
         }
         ed_b(a[0]);
@@ -1023,12 +966,7 @@ UI_SMALL static void ed_handle(const uint8_t *f, uint32_t n)   /* f: the bytes b
         break;
     case ED_TRACK:                                         /* [track] -> selected, NTRK, per track: engine, preset, level, mute, armed */
         if (na >= 1u && a[0] < NTRK && a[0] != song.sel) {
-#if FELUCCA_DINO
-            if (a[0] == TRK_DRUM) dino_mode_set(DINO_DRUMS);
-            else if (a[0] == DINO_A || a[0] == DINO_B) dino_focus_set(a[0] == DINO_B);
-#else
             track_select(a[0]);
-#endif
             if (ed_w.on)
                 ed_shadow();                               /* the editor re-reads it: no RELOAD for this */
         }

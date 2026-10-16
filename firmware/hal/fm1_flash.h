@@ -230,13 +230,8 @@ static void fl_plain_window_init(void)
     __asm__ volatile("csync\n\tsti" ::: "memory");
 }
 
-static inline uint32_t irq_save(void)
-{
-    uint32_t f;
-    __asm__ volatile("%0 = icfg\n\tcli" : "=r"(f) :: "memory");
-    return f;
-}
-static inline void irq_restore(uint32_t f) { __asm__ volatile("csync\n\ticfg = %0" :: "r"(f) : "memory"); }
+static inline uint32_t irq_save(void) { __asm__ volatile("cli" ::: "memory"); return 0; }
+static inline void irq_restore(uint32_t f) { (void)f; __asm__ volatile("csync\n\tsti" ::: "memory"); }
 
 static int fl_erase4k(uint32_t off, uint32_t *took_us)
 {

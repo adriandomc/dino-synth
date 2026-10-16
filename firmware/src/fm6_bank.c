@@ -69,15 +69,10 @@ static void fm6_bank_boot(void) { fm6_bank_scan(); }   /* persist_boot */
  * track's own, stays */
 static void fm6_bank_changed(void)
 {
-#if FELUCCA_DINO
-    /* A bank save must keep the other timbre's edited RAM voice until its next explicit load. */
-    return;
-#else
     uint32_t t;
     for (t = 0; t < NPART; t++)
         if (fm6_slot[t] >= FM6_NFACTORY && fm6_slot[t] != 0xFFu)
             fm6_slot[t] = 0xFFu;
-#endif
 }
 
 /* slot k = the packed record pk (0: erase), then the bank to flash: 0 ok, 1 bad slot, 2 flash error (the

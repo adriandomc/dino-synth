@@ -1,42 +1,40 @@
-# DINO SYNTH para FM-1
+# SLOOP 2.7 + Dinoperro para FM-1
 
-Firmware para tocar el M-VAVE FM-1 en vivo y grabarlo en tu DAW, con los doce motores de SLOOP, dos timbres A/B y visualizadores del dinoperro cósmico.
+[SLOOP v2.7](https://github.com/isod89/sloop-fm1/releases/tag/v2.7), commit `ba54ba5f0e7f6e0a1a3499497809e1e6c1ad7e8c`, con cuatro visualizadores adicionales del dinoperro cósmico.
 
-Base fijada: [SLOOP v2.7](https://github.com/isod89/sloop-fm1/releases/tag/v2.7), commit `ba54ba5f0e7f6e0a1a3499497809e1e6c1ad7e8c`. Se conservan historial, licencias y créditos.
+El instrumento vuelve al funcionamiento original de SLOOP 2.7: sus doce motores, cuatro pistas, secuenciador, grabación, canciones, arpegiador, efectos, controles, presets y editor web. HOME, SEL, SAVE, REC y los knobs conservan sus funciones de SLOOP. Los cambios de interpretación, A/B y guardado de DINO SYNTH se han retirado.
 
-- SINGLE, LAYER, SPLIT y DRUMS; ocho voces compartidas entre sintetizadores, con los límites de cada motor.
-- Los 153 patches de fábrica comienzan secos; efectos disponibles para editar y guardar.
-- SEL abre una lista de sonidos con nombre, motor y origen FACTORY/USER.
-- SAVE guarda 32 patches USER y cuatro PERFORMANCE; espera silencio antes de escribir flash.
-- Dieciséis visualizadores, incluidos COSMIC DOG, HALO, NEBULA y CONWAY DREAM, con dibujo procedural reactivo.
-- Salida analógica, audio USB y MIDI USB/TRS; editor, samples, FM6 y backups.
+Los doce visualizadores originales permanecen. Se añaden:
 
-**Versión de desarrollo: aún no probada en un FM-1 físico.** Las pruebas de host y los límites de memoria pasan; la estabilidad, latencia y ausencia de glitches reales requieren probar el dispositivo.
+| Número | Visualizador | Imagen |
+| --- | --- | --- |
+| 13 | COSMIC DOG | Dinoperro, estrellas y movimiento con las notas y el nivel. |
+| 14 | HALO | Ramas y simetrías procedurales alrededor del personaje. |
+| 15 | NEBULA | Partículas y trayectorias reactivas. |
+| 16 | CONWAY DREAM | Fondo de autómata celular con colores y estelas. |
 
-Lee [DINO.md](DINO.md) para controles, SAVE, compatibilidad de bancos, instalación, recuperación y pruebas de hardware.
+Desde TRACKS, pulsa **HOME** para abrir el visualizador y gira **SELECT** para elegir estilo. HOME vuelve a TRACKS. El último estilo se conserva como en SLOOP.
 
-[Firmware 0.2-dev](docs/firmware/dino-synth-0.2-dev.fwsc) · [Validación y límites conocidos](DINO-VALIDATION.md) · [Editor offline](docs/webapp/editor/sloop-editor.html)
+[Guía de esta versión](SLOOP-DINOPERRO.md) · [Manual original de SLOOP](GUIDE.md) · [Firmware](docs/firmware/sloop-2.7-dinoperro.fwsc) · [Editor original offline](docs/webapp/editor/sloop-editor.html)
 
-![COSMIC DOG, HALO, NEBULA y CONWAY DREAM: capturas del renderer real](assets/dino/cosmic-preview.png)
+![Dinoperro con COSMIC DOG, HALO y NEBULA](assets/dino/cosmic-preview.png)
 
-[Animación de CONWAY DREAM](assets/dino/conway-animation.gif)
+![CONWAY DREAM](assets/dino/conway-preview.png)
 
-![Pantallas LIVE, SEL, PERFORMANCE y SAVE del firmware](assets/dino/ui-contact-sheet.png)
+## Compilar
 
-## Compilar y comprobar
-
-Con Ubuntu WSL2, el toolchain JieLi y SDK fijados en [DINO.md](DINO.md):
+Prepara Ubuntu en WSL2, el toolchain JieLi y los tres archivos del SDK indicados en [BUILDING.md](BUILDING.md). Desde PowerShell:
 
 ```powershell
-.\build-dino.ps1 -Test
+.\build-dinoperro.ps1 -Test
 ```
 
-Genera `build/felucca.fwsc`. No instala firmware automáticamente. La suite produce capturas y animación del renderer real en `build/dino-visuals/`.
+El firmware queda en `build/felucca.fwsc`. `python tools/package_dinoperro.py` reúne el firmware, el instalador, el editor original, las previews y las guías en `build/sloop-2.7-dinoperro.zip`.
 
-`python tools/package_dino.py` reúne firmware, editor, instalador, previews y guía en `build/dino-synth-0.2-dev.zip` después de compilar y ejecutar las pruebas.
+Las capturas proceden del renderer del firmware. Las pruebas de host no sustituyen la comprobación de audio y rendimiento en el FM-1 físico.
 
-## Créditos
+## Créditos y licencia
 
-DINO deriva de [SLOOP](https://github.com/isod89/sloop-fm1) y [Felucca](https://github.com/hugelton/Felucca), de Leo Kuroshita / Hügelton Instruments, sus colaboradores y las bibliotecas citadas en el código. El README original permanece íntegro en [SLOOP-README.md](SLOOP-README.md).
+Basado en [SLOOP](https://github.com/isod89/sloop-fm1) y [Felucca](https://github.com/hugelton/Felucca), de Leo Kuroshita / Hügelton Instruments, sus colaboradores y las bibliotecas citadas en el código. El README original permanece en [SLOOP-README.md](SLOOP-README.md).
 
-El código mantiene [GPL-3.0-only](LICENSE). Las condiciones específicas de assets y material de terceros están en [LICENSING.md](LICENSING.md).
+Se conservan historial, créditos y [GPL-3.0-only](LICENSE). Las condiciones de assets y material de terceros están en [LICENSING.md](LICENSING.md).

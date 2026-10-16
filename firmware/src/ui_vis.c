@@ -8,14 +8,17 @@
  * right, as if MASTER were all the way up: the picture does not follow the volume knob, even at 0), the tracks' peaks (fx.c / drums.c, as the TRACKS meters read them), the notes that started
  * (voice.c vis_hit) and the transport clock. Everything is drawn in the main loop, every other frame, in two
  * bands of 120 rows (the canvas holds 124), preemptible by the audio IRQ. */
-#define VIS_N (FELUCCA_DINO ? 16u : 12u)
+#ifndef FELUCCA_COSMIC
+#define FELUCCA_COSMIC 0
+#endif
+#define VIS_N (FELUCCA_COSMIC ? 16u : 12u)
 static const char *const VIS_NAME[VIS_N] = {"OSCILLOSCOPE", "SPECTRUM", "SPECTROGRAM", "LISSAJOUS", "VU METERS",
                                             "CIRCLE", "TAPE", "LCD", "BOUNCE", "ORBIT", "WIRES", "SLOOP"
-#if FELUCCA_DINO
+#if FELUCCA_COSMIC
                                             , "COSMIC DOG", "HALO", "NEBULA", "CONWAY DREAM"
 #endif
 };
-#if FELUCCA_DINO
+#if FELUCCA_COSMIC
 static uint32_t vis_draw_ms, vis_name_until;
 #endif
 /* vis_on, vis_shown_last, vis_name_t: ui_draw.c; vis_style: panel.c (kept with the settings) */
@@ -50,7 +53,7 @@ static void vis_open(void)
 {
     vis_on = 1;
     vis_name_t = 30;
-#if FELUCCA_DINO
+#if FELUCCA_COSMIC
     vis_name_until = fm1_ms + 1000u;
 #endif
     ui.force = 1;
@@ -216,7 +219,7 @@ static void vis_bands(int16_t *out)
     }
 }
 
-#if FELUCCA_DINO
+#if FELUCCA_COSMIC
 #include "cosmic_dog.h"
 #endif
 
@@ -349,8 +352,8 @@ static void vis_update(void)
     default:
         break;
     }
-#if FELUCCA_DINO
-    cosmic_update(now, hit);
+#if FELUCCA_COSMIC
+    if (vis_style >= 12u) cosmic_update(now, hit);
     if (vis_style == 15u) cosmic_life_update(now, hit);
     else cosmic_life.ready = 0;
 #endif
@@ -624,18 +627,20 @@ static void vis_draw(void)
     uint32_t pass;
     if (!vis_shown_last || ui.force) {
         vis_shown_last = 1;
-#if !FELUCCA_DINO
+#if FELUCCA_COSMIC
+        if (vis_style < 12u) lcd_fill(0, 0, 240, 240, C_BLACK);
+#else
         lcd_fill(0, 0, 240, 240, C_BLACK);
 #endif
     }
-#if FELUCCA_DINO
-    else if (fm1_ms - vis_draw_ms < (song.cpu_q8 >= 192u ? 200u : 100u)) {
+#if FELUCCA_COSMIC
+    else if (vis_style >= 12u ? fm1_ms - vis_draw_ms < (song.cpu_q8 >= 192u ? 200u : 100u) : (ui.frame & 1u)) {
 #else
     else if (ui.frame & 1u) {
 #endif
         return;
     }
-#if FELUCCA_DINO
+#if FELUCCA_COSMIC
     vis_draw_ms = fm1_ms;
 #endif
     vis_update();
@@ -654,14 +659,14 @@ static void vis_draw(void)
         case 8: vis_bounce(); break;
         case 9: vis_orbit(); break;
         case 10: vis_wires(); break;
-#if FELUCCA_DINO
+#if FELUCCA_COSMIC
         case 12: case 13: case 14: case 15: cosmic_draw(vis_style - 12u); break;
 #endif
         default: vis_sloop(); break;
         }
         if (!pass && (
-#if FELUCCA_DINO
-            (int32_t)(vis_name_until - fm1_ms) > 0 ||
+#if FELUCCA_COSMIC
+            (vis_style >= 12u ? (int32_t)(vis_name_until - fm1_ms) > 0 : vis_name_t) ||
 #else
             vis_name_t ||
 #endif
@@ -672,7 +677,7 @@ static void vis_draw(void)
             cv_text(120 - text_w(&FONT_S, s) / 2, 2, &FONT_S, s, C_WHITE);
             if (!ui.msg_t) {
                 fmt_int(n, (int32_t)(vis_style % VIS_N) + 1);
-                str_cpy(n + str_len(n), FELUCCA_DINO ? "/16" : "/12", 4);
+                str_cpy(n + str_len(n), FELUCCA_COSMIC ? "/16" : "/12", 4);
                 cv_text(4, 2, &FONT_S, n, C_DIM);
             }
         }
@@ -685,13 +690,9 @@ static void vis_draw(void)
 /* SELECT on the visualiser: the next / previous style (round) */
 static void vis_select(int32_t s)
 {
-#if FELUCCA_DINO
-    vis_style = (uint8_t)(((int32_t)vis_style + s % (int32_t)VIS_N + (int32_t)VIS_N) % (int32_t)VIS_N);
-#else
     vis_style = (uint8_t)((vis_style + (s > 0 ? 1u : VIS_N - 1u)) % VIS_N);
-#endif
     vis_name_t = 30;
-#if FELUCCA_DINO
+#if FELUCCA_COSMIC
     vis_name_until = fm1_ms + 1000u;
 #endif
     ui.force = 1;
