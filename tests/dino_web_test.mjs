@@ -12,7 +12,7 @@ const link=new E.Link(d=>output.send(d),{timeout:300});
 input.onmidimessage=e=>link.receive(e.data);
 const request=(op,...args)=>link.request([E.CMD.DINO,[op,...args]]).then(E.parse[E.CMD.DINO]);
 const info=E.parse[E.CMD.INFO](await link.request(E.req.info()));
-assert.match(info.version,/^DINO SYNTH/);assert.equal(info.proto,13);assert.equal(info.nengines,12);
+assert.match(info.version,/^DINO SYNTH 0\.2/);assert.equal(info.proto,13);assert.equal(info.nengines,12);
 let state=await request(0);
 assert.equal(state.mode,0);assert.equal(state.split,60);assert.equal(state.style,12);
 assert.equal(state.slots.length,4);
@@ -21,15 +21,17 @@ for(let engine=0;engine<info.nengines;engine++){
   const dump=E.parse[E.CMD.DUMP](await link.request(E.req.dump()),info);
   assert.deepEqual(Array.from(dump.p.slice(33,37)),[0,0,0,0],`engine ${engine} starts dry`);
 }
-state=await request(1,2,65,1,14);
+state=await request(1,2,65,1,15);
 assert.equal(state.mode,2);assert.equal(state.split,65);assert.equal(state.focus,1);assert.equal(mock.state.sel,2);
 state=await request(3,1,1);assert.equal(state.status,2);assert.equal(state.slots[1].kind,1);
 await request(5,1,...E.strEnc('COSMIC SPLIT'));
 await request(1,0,60,0,12);
 state=await request(2,1);
-assert.equal(state.mode,2);assert.equal(state.split,65);assert.equal(state.style,14);
+assert.equal(state.mode,2);assert.equal(state.split,65);assert.equal(state.style,15);
 assert.equal(state.slots[1].name,'COSMIC SPLIT');
 assert.equal((await request(1,4,60,0,12)).rc,1,'reject invalid mode');
+state=await request(1,2,65,1,16);
+assert.equal(state.rc,1,'reject style 16');assert.equal(state.style,15,'invalid style keeps the previous choice');
 assert.equal((await request(2,0)).rc,2,'an empty memory cannot load');
 for(const cmd of [E.CMD.STEP_SET,E.CMD.PROJECT,E.CMD.LOCK_SET,E.CMD.FILL_SET]){
   const response=await new Promise(resolve=>{
@@ -45,6 +47,7 @@ const archive=await E.backupCapture((r,o)=>link.request(r,o),info);
 await request(1,0,42,0,12);
 await E.backupRestore((r,o)=>link.request(r,o),archive);
 state=await request(0);assert.equal(state.split,65,'backup restores live setup');
+assert.equal(state.style,15,'backup restores CONWAY DREAM');
 
 // Incompatible archives must fail before the first bank is written, including files without firmware metadata.
 function archiveWith(bytes) {
@@ -70,6 +73,26 @@ async function rejectsFileBeforeWrite(file,version) {
 for(let format=1;format<=6;format++)await rejectsBeforeWrite([0x30+format,0x4e,0x55,0x46],'DINO SYNTH 0.1');
 for(const magic of [[0x44,0x49,0x4e,0x31],[0x44,0x49,0x41,0x31]])
   await rejectsBeforeWrite(magic,'FELUCCA SLOOP 2.7');
+for(const magic of [[0x44,0x49,0x4e,0x31],[0x44,0x49,0x41,0x31]]) {
+  const record=new Uint8Array(34);record.set(magic);record[33]=15;
+  const file=archiveWith(record),commands=[];
+  await assert.rejects(E.backupRestore(async(r,o)=>{
+    commands.push(r[0]);
+    const reply=await link.request(r,o);
+    return r[0]===E.CMD.INFO?infoReply('DINO SYNTH 0.1'):reply;
+  },file),e=>e.code==='bkNewer');
+  assert.deepEqual(commands,[E.CMD.INFO],'CONWAY DREAM is rejected before BK_BEGIN, including metadata-free records');
+  record[33]=16;await rejectsFileBeforeWrite(archiveWith(record),'DINO SYNTH 0.1');
+  for(const [style,target] of [[14,'DINO SYNTH 0.1'],[14,'DINO SYNTH 0.2'],[15,'DINO SYNTH 0.2']]) {
+    record[33]=style;const compatible=archiveWith(record);compatible.firmware='DINO SYNTH 0.1';
+    const written=[];
+    await E.backupRestore(async([cmd,args])=>{
+      if(cmd===E.CMD.INFO)return infoReply(target);
+      assert.equal(cmd,E.CMD.BK_PUT);written.push(args[1]);return [args[0],args[1],0];
+    },compatible);
+    assert(written.includes(0),'compatible visual records pass preflight and restore');
+  }
+}
 const preservedLegacy=archiveWith(new Uint8Array([0x44,0x49,0x41,0x31]));
 const legacySlot=format=>{const data=new Uint8Array([0x30+format,0x4e,0x55,0x46]);
   return {id:2,len:data.length,crc:E.crc32(data),data:E.b64enc(data)};};
@@ -114,9 +137,12 @@ const begin=html.indexOf('/* DINO performance uses'),end=html.indexOf('\n$("conn
 const disconnect=html.slice(html.indexOf('function disconnect('),html.indexOf('\nfunction onState(',html.indexOf('function disconnect(')));
 const U=vm.runInNewContext(html.slice(begin,end)+'\n'+disconnect+
   ';({dinoWrite,dinoRead,dinoMidiChannel,dinoKeyOn,dinoKeyOff,dinoAllOff,dinoHeld,dinoBend,dinoCenter,disconnect})',context);
-await U.dinoWrite(1,1,65,1,14);
+assert.equal(element('dino-visual').children.length,16,'all sixteen visual styles are offered');
+assert.equal(element('dino-visual').children[15].text,'CONWAY DREAM');
+await U.dinoWrite(1,1,65,1,15);
 assert.equal(wrapped,1,'DINO writes use the operation wrapper instead of shadowing it');
 assert.equal(reloaded,1);assert.equal(device.dino.mode,1);assert.equal(device.sel,2);
+assert.equal(device.dino.style,15,'the browser helper can select CONWAY DREAM');
 device.dino.mode=3;assert.equal(U.dinoMidiChannel(),9,'drums use DR CH');
 device.dump.g[14]=7;assert.equal(U.dinoMidiChannel(),5,'explicit receive channel overrides DR CH');
 device.dump.g[14]=1;assert.equal(U.dinoMidiChannel(),null,'CLOCK only has no note channel');

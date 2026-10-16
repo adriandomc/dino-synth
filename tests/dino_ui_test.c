@@ -17,6 +17,11 @@ int main(int argc, char **argv)
 {
     preview_dir = argc > 1 ? argv[1] : 0;
     dino_test_init(); settings_init(); panel_init(); layers_init(); palette_set(0); dino_init_live();
+    uint32_t settings_bits = lights_word() & ~(15u << 17);
+    vis_style = 15u;
+    uint32_t saved_settings = lights_word();
+    assert(((saved_settings >> 17) & 15u) == 15u && (saved_settings & ~(15u << 17)) == settings_bits);
+    vis_style = 0; lights_from_word(saved_settings); assert(vis_style == 15u); vis_style = 0;
     dino_test_frame(); preview("live");
     fm1_in.enc_steps[panel.enc[EN_K1]] = 20; dino_test_frame();
     assert(dino.mod == 20);

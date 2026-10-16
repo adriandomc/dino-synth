@@ -71,7 +71,9 @@ Las escrituras usan el commit A/B de SLOOP. Escribir flash puede detener el proc
 
 ## Visualizadores
 
-Se conservan los doce estilos de SLOOP y se añaden **COSMIC DOG**, **HALO** y **NEBULA**. El dinoperro mantiene cuerpo verde, hocico amarillo y sombrero violeta. Las figuras, simetrías y partículas reaccionan a notas y energía de ambos timbres. COSMIC DOG es el estilo inicial del primer arranque.
+Se conservan los doce estilos de SLOOP y se añaden **COSMIC DOG**, **HALO**, **NEBULA** y **CONWAY DREAM**, para un total de dieciséis. El dinoperro mantiene cuerpo verde, hocico amarillo y sombrero violeta. Las figuras, simetrías y partículas reaccionan a notas y energía de ambos timbres. COSMIC DOG es el estilo inicial del primer arranque.
+
+**CONWAY DREAM** pone al dinoperro delante de un fondo de autómata celular inspirado en el Game of Life de Conway: células de colores, estelas y cambios de paleta. Evoluciona con las reglas B3/S23; las notas y la energía de A/B introducen actividad y modifican el color y el movimiento. SELECT lo elige como estilo 16; también se puede seleccionar desde el editor y guardar en una PERFORMANCE.
 
 El renderer usa el canvas existente, geometría entera, cantidades máximas de elementos y aleatoriedad independiente del audio. Se ejecuta en el bucle principal, interrumpible por el audio, con objetivos de 10 cuadros/s o 5 bajo carga alta. Esos objetivos requieren confirmar el comportamiento físico; las mediciones de host excluyen SPI y preempción real.
 
@@ -81,12 +83,14 @@ Los previews se generan con el renderer C del firmware:
 sh tests/run_dino_tests.sh
 ```
 
-Resultados en `build/dino-visuals/`: `cosmic-preview.png`, `cosmic-contact-sheet.png` y `cosmic-animation.gif`.
+Resultados en `build/dino-visuals/`: `cosmic-preview.png`, `cosmic-contact-sheet.png` y `cosmic-animation.gif`. El nuevo estilo tiene su propio `conway-preview.png` y `conway-animation.gif`.
 Las capturas de LIVE, SEL, PERFORMANCE, DRUMS y SAVE se generan en `build/dino-ui/` con el renderer real de sus pantallas.
 
 ## Editor, backups e instalación
 
 Usa el editor DINO incluido en esta revisión. Permite sonidos, A/B, split, efectos, samples, FM6, nombres y backups. El protocolo DINO es v13, comando SysEx 78; las operaciones antiguas de patrones/grabación/canciones están bloqueadas también en el firmware. Los IDs existentes de presets, samples y bancos se conservan. Los backups incluyen las cuatro memorias PERFORMANCE; también pueden conservar y restaurar objetos de canciones SLOOP como datos, sin reproducirlos.
+
+La versión 0.2 añade CONWAY DREAM conservando el formato de las memorias anteriores. Los backups 0.1 se pueden recuperar en 0.2. Un backup que use CONWAY DREAM necesita firmware 0.2 o posterior: el editor rechaza su restauración en 0.1 antes de escribir bancos o memorias.
 
 Antes de actualizar desde SLOOP, conserva un backup completo de SLOOP en tu computadora. Conserva también un backup DINO antes de reemplazar una PERFORMANCE o un banco FM6. Volver a SLOOP requiere su firmware y tu backup SLOOP: el formato DINO no es un formato de canción compatible con SLOOP. No dependas de un backup DINO para recuperar una canción sobrescrita.
 
@@ -153,11 +157,11 @@ sh tests/run_dino_tests.sh
 
 La suite DINO comprueba routing/propiedad de notas, sustain y controles; UI y patches secos; persistencia, corrupción y fallos de escritura; visualizadores; render de los 153 patches con MOD=0 frente al código de voz upstream y uno/dos núcleos; sanitizers; editor web y tests heredados de almacenamiento/FM6. El registro del compilador y el linker siguen siendo la fuente de verdad para límites de memoria. Los resultados y los dos fallos de presupuesto que también aparecen en la base intacta están en [DINO-VALIDATION.md](DINO-VALIDATION.md).
 
-En la compilación de desarrollo del 16 de octubre de 2026 se midieron `.data + .bss` **53,960 / 98,304 B**, lowram **22,772 / 29,488 B** y pool **330,084 / 344,064 B**: márgenes de 44,344 B, 6,716 B y 13,980 B. Los tamaños cambian con el código; revisa siempre el nuevo resultado del build. El presupuesto de stacks y sus guardas se conserva, pero la profundidad real y el margen temporal deben medirse en hardware.
+En la compilación de desarrollo del 16 de octubre de 2026 se midieron `.data + .bss` **53,960 / 98,304 B**, lowram **22,772 / 29,488 B** y pool **331,252 / 344,064 B**: márgenes de 44,344 B, 6,716 B y 12,812 B. Los tamaños cambian con el código; revisa siempre el nuevo resultado del build. El presupuesto de stacks y sus guardas se conserva, pero la profundidad real y el margen temporal deben medirse en hardware.
 
 ## Prueba pendiente en el FM-1
 
-Conecta la salida analógica al DAW y compara visuales apagados, estilos originales y los tres estilos nuevos. Usa capas de motores exigentes, notas repetidas, pedal, cambios de foco/split/preset, varios efectos y bend. Comprueba respuesta de los controles, finales de nota, pops, clics, timeouts del segundo núcleo, pérdida de voces dentro del presupuesto y margen de stacks. Prueba SAVE pendiente, cancelación, recuperación tras reiniciar y backups con tus samples/FM6. Repite con audio USB si lo usarás en una actuación.
+Conecta la salida analógica al DAW y compara visuales apagados, estilos originales y los cuatro estilos nuevos. Usa capas de motores exigentes, notas repetidas, pedal, cambios de foco/split/preset, varios efectos y bend. Comprueba respuesta de los controles, finales de nota, pops, clics, timeouts del segundo núcleo, pérdida de voces dentro del presupuesto y margen de stacks. Prueba SAVE pendiente, cancelación, recuperación tras reiniciar y backups con tus samples/FM6. Repite con audio USB si lo usarás en una actuación.
 
 No se ha realizado esta prueba física en esta revisión. Las pruebas de host y los previews no certifican ausencia de glitches en tu unidad.
 

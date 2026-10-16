@@ -8,16 +8,18 @@ Base fijada: [SLOOP v2.7](https://github.com/isod89/sloop-fm1/releases/tag/v2.7)
 - Los 153 patches de fábrica comienzan secos; efectos disponibles para editar y guardar.
 - SEL abre una lista de sonidos con nombre, motor y origen FACTORY/USER.
 - SAVE guarda 32 patches USER y cuatro PERFORMANCE; espera silencio antes de escribir flash.
-- Quince visualizadores, incluidos COSMIC DOG, HALO y NEBULA, con dibujo procedural reactivo.
+- Dieciséis visualizadores, incluidos COSMIC DOG, HALO, NEBULA y CONWAY DREAM, con dibujo procedural reactivo.
 - Salida analógica, audio USB y MIDI USB/TRS; editor, samples, FM6 y backups.
 
 **Versión de desarrollo: aún no probada en un FM-1 físico.** Las pruebas de host y los límites de memoria pasan; la estabilidad, latencia y ausencia de glitches reales requieren probar el dispositivo.
 
 Lee [DINO.md](DINO.md) para controles, SAVE, compatibilidad de bancos, instalación, recuperación y pruebas de hardware.
 
-[Firmware 0.1-dev](docs/firmware/dino-synth-0.1-dev.fwsc) · [Validación y límites conocidos](DINO-VALIDATION.md) · [Editor offline](docs/webapp/editor/sloop-editor.html)
+[Firmware 0.2-dev](docs/firmware/dino-synth-0.2-dev.fwsc) · [Validación y límites conocidos](DINO-VALIDATION.md) · [Editor offline](docs/webapp/editor/sloop-editor.html)
 
-![COSMIC DOG, HALO y NEBULA: capturas del renderer real](assets/dino/cosmic-preview.png)
+![COSMIC DOG, HALO, NEBULA y CONWAY DREAM: capturas del renderer real](assets/dino/cosmic-preview.png)
+
+[Animación de CONWAY DREAM](assets/dino/conway-animation.gif)
 
 ![Pantallas LIVE, SEL, PERFORMANCE y SAVE del firmware](assets/dino/ui-contact-sheet.png)
 
@@ -31,7 +33,7 @@ Con Ubuntu WSL2, el toolchain JieLi y SDK fijados en [DINO.md](DINO.md):
 
 Genera `build/felucca.fwsc`. No instala firmware automáticamente. La suite produce capturas y animación del renderer real en `build/dino-visuals/`.
 
-`python tools/package_dino.py` reúne firmware, editor, instalador, previews y guía en `build/dino-synth-0.1-dev.zip` después de compilar y ejecutar las pruebas.
+`python tools/package_dino.py` reúne firmware, editor, instalador, previews y guía en `build/dino-synth-0.2-dev.zip` después de compilar y ejecutar las pruebas.
 
 ## Créditos
 

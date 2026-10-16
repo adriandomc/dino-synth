@@ -15,7 +15,7 @@ import make_site
 
 
 def main():
-    version = "0.1-dev"
+    version = "0.2-dev"
     package = ROOT / "build/felucca.fwsc"
     app = ROOT / "build/felucca.bin"
     if not app.exists() or b"DINO SYNTH" not in app.read_bytes():
@@ -31,7 +31,7 @@ def main():
     (out / "README.md").write_text(readme.replace("docs/firmware/", "firmware/").replace("docs/webapp/", "webapp/").replace("assets/dino/", "previews/"), encoding="utf-8")
     previews = out / "previews"
     previews.mkdir(exist_ok=True)
-    for directory, names in (("dino-visuals", ("cosmic-preview.png", "cosmic-contact-sheet.png", "cosmic-animation.gif")),
+    for directory, names in (("dino-visuals", ("cosmic-preview.png", "cosmic-contact-sheet.png", "cosmic-animation.gif", "conway-preview.png", "conway-animation.gif")),
                              ("dino-ui", ("ui-contact-sheet.png",))):
         for name in names:
             shutil.copyfile(ROOT / "build" / directory / name, previews / name)

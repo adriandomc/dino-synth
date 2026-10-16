@@ -8,11 +8,11 @@
  * right, as if MASTER were all the way up: the picture does not follow the volume knob, even at 0), the tracks' peaks (fx.c / drums.c, as the TRACKS meters read them), the notes that started
  * (voice.c vis_hit) and the transport clock. Everything is drawn in the main loop, every other frame, in two
  * bands of 120 rows (the canvas holds 124), preemptible by the audio IRQ. */
-#define VIS_N (FELUCCA_DINO ? 15u : 12u)
+#define VIS_N (FELUCCA_DINO ? 16u : 12u)
 static const char *const VIS_NAME[VIS_N] = {"OSCILLOSCOPE", "SPECTRUM", "SPECTROGRAM", "LISSAJOUS", "VU METERS",
                                             "CIRCLE", "TAPE", "LCD", "BOUNCE", "ORBIT", "WIRES", "SLOOP"
 #if FELUCCA_DINO
-                                            , "COSMIC DOG", "HALO", "NEBULA"
+                                            , "COSMIC DOG", "HALO", "NEBULA", "CONWAY DREAM"
 #endif
 };
 #if FELUCCA_DINO
@@ -351,6 +351,8 @@ static void vis_update(void)
     }
 #if FELUCCA_DINO
     cosmic_update(now, hit);
+    if (vis_style == 15u) cosmic_life_update(now, hit);
+    else cosmic_life.ready = 0;
 #endif
 }
 
@@ -653,7 +655,7 @@ static void vis_draw(void)
         case 9: vis_orbit(); break;
         case 10: vis_wires(); break;
 #if FELUCCA_DINO
-        case 12: case 13: case 14: cosmic_draw(vis_style - 12u); break;
+        case 12: case 13: case 14: case 15: cosmic_draw(vis_style - 12u); break;
 #endif
         default: vis_sloop(); break;
         }
@@ -670,7 +672,7 @@ static void vis_draw(void)
             cv_text(120 - text_w(&FONT_S, s) / 2, 2, &FONT_S, s, C_WHITE);
             if (!ui.msg_t) {
                 fmt_int(n, (int32_t)(vis_style % VIS_N) + 1);
-                str_cpy(n + str_len(n), FELUCCA_DINO ? "/15" : "/12", 4);
+                str_cpy(n + str_len(n), FELUCCA_DINO ? "/16" : "/12", 4);
                 cv_text(4, 2, &FONT_S, n, C_DIM);
             }
         }

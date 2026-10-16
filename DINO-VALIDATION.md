@@ -1,4 +1,4 @@
-# Validación DINO SYNTH 0.1-dev
+# Validación DINO SYNTH 0.2-dev
 
 Compilación de desarrollo del 16 de octubre de 2026. **Sin instalar ni validar en un FM-1 físico.**
 
@@ -13,23 +13,27 @@ Compilación de desarrollo del 16 de octubre de 2026. **Sin instalar ni validar 
 | Comprobación | Resultado |
 | --- | --- |
 | Compilación pi32v2 y validaciones de registros/memoria | PASS; cero advertencias |
-| Imagen / paquete | 522,372 B / 610,035 B |
+| Imagen / paquete | 523,692 B / 610,035 B |
 | RAM `.data + .bss` | 53,960 / 98,304 B; libres 44,344 B |
-| Lowram / pool | 22,772 / 29,488 B y 330,084 / 344,064 B |
-| Margen XIP | 59,192 B |
+| Lowram / pool | 22,772 / 29,488 B y 331,252 / 344,064 B |
+| Margen XIP | 57,872 B |
 | 153 patches de los doce motores | Render real en A/B; defaults secos |
 | MOD/BEND cero frente al renderer de voz upstream | Coincidencia bit a bit en los 153 patches |
 | Render con modulación, uno/dos núcleos y retrasos simulados | Coincidencia bit a bit |
 | Vibrato | Medido 4.9992 Hz, −50.000 a +49.657 cents; retorno exacto a cero |
 | Notas USB/TRS/locales, pedal, cambios de foco/split/preset/canal | PASS; destino y canal originales de note-off |
 | SAVE, USER, FM6, PERFORMANCE y reinicio | PASS; cancelación, silencio, corrupción, escritura interrumpida y error de flash simulados |
+| Selección y persistencia de CONWAY DREAM | PASS; estilo 15 en editor/protocolo, PERFORMANCE, autosave y backup; 0–15 válidos, 16 rechazado |
 | UI y calibración | PASS; lista SEL real, macros DRUMS y fuzz de 20,000 frames |
-| Visuales | 128 notas × tres estilos × dos cargas; límites, determinismo y wrap del reloj |
+| Visuales | 128 notas × cuatro estilos × dos cargas; límites, determinismo y wrap del reloj |
+| CONWAY DREAM | B3/S23, bloques y osciladores, bordes toroidales, estelas, eventos A/B/DRUMS y ausencia de cambios al dibujar las dos bandas |
 | Aleatoriedad visual / audio | Hash de audio NOISE inalterado al dibujar |
 | Memoria host | ASan/UBSan; exclusiones de overflow firmado y shift-base heredadas del DSP upstream |
 | Editor y paquete web | Protocolo, operaciones UI, backups, librería, instalador y sitio offline comprobados |
 
 Las capturas y animaciones proceden del renderer C del firmware. Las mediciones de render en host excluyen SPI, interrupciones y contención del FM-1; no predicen su carga real.
+
+CONWAY DREAM añade **1,168 B** al pool y no crea otro framebuffer. El estado evoluciona como máximo una generación por frame, sin recuperar generaciones atrasadas; mantiene la cadencia de 10/5 cuadros por segundo. Su prueba ASan/UBSan y la comparación de audio NOISE con/sin visuales pasan. Los backups que contienen este estilo se rechazan antes de escribir si el destino utiliza DINO 0.1.
 
 ## Diferencias en las pruebas de la base
 

@@ -10,23 +10,27 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("directory", nargs="?", type=Path, default=Path("build/dino-visuals"))
     args = parser.parse_args()
-    names = ("COSMIC DOG", "HALO", "NEBULA")
+    names = ("COSMIC DOG", "HALO", "NEBULA", "CONWAY DREAM")
+    width = 240 * len(names)
     scenarios = ((7, "IDLE"), (15, "A / LOW NOTE"), (23, "B / HIGH NOTE"),
                  (31, "A + B"), (39, "REDUCED DETAIL"), (47, "RELEASE"))
     frames = [[Image.open(args.directory / f"cosmic-{style}-{frame:02}.ppm").convert("RGB")
-               for frame in range(48)] for style in range(3)]
+               for frame in range(48)] for style in range(len(names))]
     assert all(frame.size == (240, 240) for sequence in frames for frame in sequence)
-    sheet = Image.new("RGB", (720, 262 * len(scenarios)), "#11111b")
+    sheet = Image.new("RGB", (width, 262 * len(scenarios)), "#11111b")
     draw = ImageDraw.Draw(sheet)
     for row, (frame, label) in enumerate(scenarios):
         for style, name in enumerate(names):
             sheet.paste(frames[style][frame], (240 * style, 262 * row + 22))
             draw.text((240 * style + 8, 262 * row + 5), f"{name} / {label}", fill="#dddded")
     sheet.save(args.directory / "cosmic-contact-sheet.png")
-    sheet.crop((0, 262 * 3, 720, 262 * 4)).save(args.directory / "cosmic-preview.png")
+    sheet.crop((0, 262 * 3, width, 262 * 4)).save(args.directory / "cosmic-preview.png")
+    frames[3][31].save(args.directory / "conway-preview.png")
+    frames[3][0].save(args.directory / "conway-animation.gif", save_all=True, append_images=frames[3][1:],
+                      duration=100, loop=0, optimize=False)
     animation = []
     for frame in range(48):
-        picture = Image.new("RGB", (720, 262), "#11111b")
+        picture = Image.new("RGB", (width, 262), "#11111b")
         draw = ImageDraw.Draw(picture)
         for style, name in enumerate(names):
             picture.paste(frames[style][frame], (240 * style, 22))

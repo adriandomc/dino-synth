@@ -160,7 +160,7 @@ int main(void)
     memset(fm6_patch[0], 99, 128);
     puts("FM6 exact reuse, allocation, RAM voice protection, full-bank refusal and explicit replacement: ok");
 
-    dino.mode = DINO_SPLIT; dino.focus = 1; dino.split = 72; song.octave = -2; vis_style = 14;
+    dino.mode = DINO_SPLIT; dino.focus = 1; dino.split = 72; song.octave = -2; vis_style = 15;
     trk[2].eng_req = ENGI_FM6; trk[2].p[P_E7] = fm6_slot[2]; trk[2].p[P_LEVEL] = 71; song.g[G_RSIZE] = 43;
     drum_tune[5] = -5; drum_dec[5] = 2; dino.mod = 87; dino.bend = 3000;
     proj_slot[1].magic = 0x46554E36u; assert(!strcmp(dino_performance_label(1), "LEGACY SONG"));
@@ -169,20 +169,27 @@ int main(void)
     assert(dino_save_status() == DINO_SAVE_SAVED);
     copy = *(dino_performance_t *)&proj_slot[1];
     assert(dino_store_valid(&copy, sizeof copy, DINO_PERF_MAGIC));
+    for (uint32_t style = 0; style < DINO_VIS_N; style++) {
+        copy.style = (uint8_t)style; dino_store_seal(&copy);
+        assert(dino_store_valid(&copy, sizeof copy, DINO_PERF_MAGIC));
+    }
+    copy.style = DINO_VIS_N; dino_store_seal(&copy);
+    assert(!dino_store_valid(&copy, sizeof copy, DINO_PERF_MAGIC));
+    copy = *(dino_performance_t *)&proj_slot[1];
     copy.sound[0].p[P_LEVEL]++; assert(!dino_store_valid(&copy, sizeof copy, DINO_PERF_MAGIC));
     copy = *(dino_performance_t *)&proj_slot[1]; copy.version++; dino_store_seal(&copy);
     assert(!dino_store_valid(&copy, sizeof copy, DINO_PERF_MAGIC));
     dino_store_boot(); dino.mode = DINO_SINGLE; memset(fm6_patch, 0, sizeof fm6_patch);
     test_irq = 0; panic_req = 0; assert(!dino_performance_load(1)); assert(!test_irq); test_irq = 1;
     assert(panic_req == (1u << NTRK) - 1u);
-    assert(dino.mode == DINO_SPLIT && dino.focus == 1 && dino.split == 72 && song.octave == -2 && vis_style == 14);
+    assert(dino.mode == DINO_SPLIT && dino.focus == 1 && dino.split == 72 && song.octave == -2 && vis_style == 15);
     assert(trk[2].p[P_LEVEL] == 71 && song.g[G_RSIZE] == 43 && drum_tune[5] == -5 && drum_dec[5] == 2);
     assert(fm6_patch[0][0] == 99 && fm6_patch[2][0] == 23 && !dino.mod && !dino.bend);
     puts("PERFORMANCE round trip/reboot, embedded A/B FM6, legacy protection, corruption/version rejection: ok");
 
     copy = *(dino_performance_t *)&proj_slot[1]; copy.magic = DINO_AUTO_MAGIC; dino_store_seal(&copy);
     assert(!st_save(OBJ_AUTOSAVE, &copy, sizeof copy));
-    dino.mode = DINO_SINGLE; dino_store_boot(); assert(dino.mode == DINO_SPLIT);
+    dino.mode = DINO_SINGLE; dino_store_boot(); assert(dino.mode == DINO_SPLIT && vis_style == 15);
     memset(&copy, 0, sizeof copy); copy.magic = 0x46554E36u;
     assert(!st_save(OBJ_AUTOSAVE, &copy, sizeof copy));
     dino.mode = DINO_SINGLE; dino_store_boot(); assert(dino.mode == DINO_SINGLE && vis_style == 12u);
@@ -200,12 +207,14 @@ int main(void)
     memcpy(midi_set, settings_copy, 10); assert(midi_set[0] == 7 && midi_set[5] == 12);
     puts("MIDI RX channel/BEND and deferred menu settings persist after silence and reboot: ok");
     {
-        uint8_t set[] = {1, DINO_LAYER, 65, 1, 13, 5}, bad[] = {1, 9, 60, 0, 0};
+        uint8_t set[] = {1, DINO_LAYER, 65, 1, 15, 5}, bad[] = {1, 9, 60, 0, 0};
+        uint8_t bad_style[] = {1, DINO_LAYER, 65, 1, DINO_VIS_N};
         uint8_t save[] = {3, DINO_SAVE_PERFORMANCE, 2}, cancel[] = {4};
         uint8_t rename[] = {5, 1, 'N', 'E', 'W', 0};
         dino_wire(set, sizeof set);
         assert(wire[0] == 1 && !wire[1] && wire[2] == DINO_LAYER && wire[3] == 65 && wire[4] == 1);
-        assert(wire[5] == 5 && wire[6] == 13 && song.octave == 2);
+        assert(wire[5] == 5 && wire[6] == 15 && song.octave == 2);
+        dino_wire(bad_style, sizeof bad_style); assert(wire[1] == 1 && wire[6] == 15);
         dino_wire(bad, sizeof bad); assert(wire[1] == 1 && dino.mode == DINO_LAYER);
         dino_wire(save, sizeof save); assert(!wire[1] && wire[7] == DINO_SAVE_PENDING);
         dino_wire(cancel, sizeof cancel); assert(!wire[7]);

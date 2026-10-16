@@ -2513,9 +2513,11 @@ async function backupRestore(rq, file, progress = () => {}) {
   /* (2.6) projects newer than the device reads (a 2.6 backup into 2.5): stop before anything is written (it stopped at
      the first project, the preset banks already replaced) */
   const info = parse[CMD.INFO](await rq(req.info(), { timeout: 1000, retries: 2 }));
-  const dinoBytes = [...m.values()].some(d=>d.length>=4&&d[0]===68&&d[1]===73&&[65,78].includes(d[2])&&d[3]===49);
-  if ((String(file.firmware||'').startsWith('DINO SYNTH')||dinoBytes) && !info.version.startsWith('DINO SYNTH'))
+  const dinoRecords = [...m.values()].filter(d=>d.length>=4&&d[0]===68&&d[1]===73&&[65,78].includes(d[2])&&d[3]===49);
+  if ((String(file.firmware||'').startsWith('DINO SYNTH')||dinoRecords.length) && !info.version.startsWith('DINO SYNTH'))
     throw new BackupError('bkNewer','A DINO backup requires DINO SYNTH firmware.');
+  if (info.version.startsWith('DINO SYNTH') && !bkFwAtLeast(info.version,[0,2,0]) && dinoRecords.some(d=>d.length>33&&d[33]>=15))
+    throw new BackupError('bkNewer','CONWAY DREAM backups require DINO SYNTH 0.2 or newer.');
   if (info.version.startsWith('DINO SYNTH') && (bkProjFormat(m.get(0))>0 || [2,3,4,5].some(id=>{
     const format=bkProjFormat(m.get(id));return format>0&&format<6;
   })))
@@ -3309,7 +3311,7 @@ function makeMockDevice(opt = {}) {
     if (opt.dino && cmd === CMD.DINO) {
       const d = st.dino, op = a[0] || 0; let rc = 0;
       if (op === 1) {
-        if (a.length < 5 || a[1]>3 || a[2]>127 || a[3]>1 || a[4]>14) rc=1;
+        if (a.length < 5 || a[1]>3 || a[2]>127 || a[3]>1 || a[4]>=16) rc=1;
         else {
           Object.assign(d,{mode:a[1],split:a[2],focus:a[3],style:a[4]});
           if(a.length>5) d.octave=clamp(a[5]-3,-3,3);
@@ -3411,7 +3413,7 @@ function makeMockDevice(opt = {}) {
         b(0);
         break;
       case CMD.INFO:
-        s(opt.dino ? "DINO SYNTH 0.1 (MOCK)" : opt.legacy ? "FELUCCA 0.4 BETA (MOCK)" : opt.v3 ? "FELUCCA 0.8 (MOCK)" : "FELUCCA SLOOP 2.6 (MOCK)"); b(ENG.length); b(P_COUNT); b(G_COUNT); b(NSTEP); b(P_E0);
+        s(opt.dino ? "DINO SYNTH 0.2 (MOCK)" : opt.legacy ? "FELUCCA 0.4 BETA (MOCK)" : opt.v3 ? "FELUCCA 0.8 (MOCK)" : "FELUCCA SLOOP 2.6 (MOCK)"); b(ENG.length); b(P_COUNT); b(G_COUNT); b(NSTEP); b(P_E0);
         ENG.forEach((e) => s(e.name));
         if (!opt.legacy) b(NTRK);
         if (v5) b(opt.dino ? 13 : mockProto);
@@ -11639,7 +11641,7 @@ window.addEventListener("blur", lvLetGo);
 document.addEventListener("visibilitychange", () => { if (document.hidden) lvLetGo(); });
 
 /* DINO performance uses the existing editor, librarian and sample tools. */
-const DINO_STYLES = ["OSCILLOSCOPE","SPECTRUM","SPECTROGRAM","LISSAJOUS","METERS","RING","TAPE","LCD","BOUNCE","ORBIT","WIRES","SLOOP","COSMIC DOG","FRACTAL HALO","NEBULA"];
+const DINO_STYLES = ["OSCILLOSCOPE","SPECTRUM","SPECTROGRAM","LISSAJOUS","METERS","RING","TAPE","LCD","BOUNCE","ORBIT","WIRES","SLOOP","COSMIC DOG","FRACTAL HALO","NEBULA","CONWAY DREAM"];
 const DINO_SAVE_STATUS = ["","SAVE PENDING · release notes and let the effect tails finish.","SAVED","SAVE ERROR · previous saved copy retained.","FM6 BANK FULL · choose a replacement, or cancel."];
 const dinoHeld = new Map();
 let dinoPollBusy = false, dinoUiDevice = null, dinoBendHeld = null;

@@ -131,8 +131,8 @@ def main(pkg, version, out, dino=False):
     html = html.replace("<!--LOGO-->", '<b style="font-size:28px;color:#40c936">DINO SYNTH</b>' if dino else logo.read_text(encoding="utf-8") if logo.exists() else "<b>SLOOP</b>")
     if dino:
         html = html.replace('SLOOP', 'DINO SYNTH').replace('edit sounds and sequences from the computer', 'edit sounds, A/B, split, samples and backups')
-        html = re.sub(r'<p class="lead">.*?</p>', '<p class="lead">A live synthesizer: SINGLE, LAYER, SPLIT and DRUMS, twelve engines, dry factory sounds and fifteen audio reactive visualizers.</p>', html, count=1, flags=re.S)
-        html = re.sub(r'<div class="tiles">.*?</div>\s*<p data-t="intro">', '<div class="tiles"><div class="tile"><b>12</b><span>synthesis engines</span></div><div class="tile"><b>A/B</b><span>layer and split</span></div><div class="tile"><b>15</b><span>visual styles</span></div><div class="tile"><b>4</b><span>performance memories</span></div></div><p data-t="intro">', html, count=1, flags=re.S)
+        html = re.sub(r'<p class="lead">.*?</p>', '<p class="lead">A live synthesizer: SINGLE, LAYER, SPLIT and DRUMS, twelve engines, dry factory sounds and sixteen audio reactive visualizers.</p>', html, count=1, flags=re.S)
+        html = re.sub(r'<div class="tiles">.*?</div>\s*<p data-t="intro">', '<div class="tiles"><div class="tile"><b>12</b><span>synthesis engines</span></div><div class="tile"><b>A/B</b><span>layer and split</span></div><div class="tile"><b>16</b><span>visual styles</span></div><div class="tile"><b>4</b><span>performance memories</span></div></div><p data-t="intro">', html, count=1, flags=re.S)
         html = html.replace('DINO SYNTH is based on Felucca', 'DINO SYNTH is based on Sloop 2.7 by isod89 and Felucca')
         html = html.replace('https://github.com/hugelton/Felucca', 'https://github.com/adriandomc/dino-synth/tree/dino-synth').replace('github.com/hugelton/Felucca', 'github.com/adriandomc/dino-synth')
     inst, ed, fw = out / "webapp" / "installer", out / "webapp" / "editor", out / "firmware"

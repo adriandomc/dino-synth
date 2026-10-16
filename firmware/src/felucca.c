@@ -6,7 +6,7 @@
 #endif
 #if FELUCCA_DINO
 #ifndef FELUCCA_VERSION
-#define FELUCCA_VERSION "DINO SYNTH 0.1"
+#define FELUCCA_VERSION "DINO SYNTH 0.2"
 #endif
 #endif
 #include <stdint.h>

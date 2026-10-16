@@ -36,7 +36,7 @@ for name in storage_test upreset_test project_test fm6_test recovery_test; do
     "$OUT/$name"
 done
 
-for name in dino_store_test dino_live_test dino_ui_test dino_render_test; do
+for name in dino_store_test dino_live_test dino_ui_test dino_render_test dino_vis_test; do
     compile "${name}_asan" "$name" -O1 -g -fsanitize=address,undefined \
         -fno-sanitize=shift-base,signed-integer-overflow -fno-sanitize-recover=all
     CORES=1 "$OUT/${name}_asan"

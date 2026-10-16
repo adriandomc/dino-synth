@@ -75,21 +75,69 @@ static void t_schedule(void)
     fm1_ms = UINT32_MAX - 30u; ui.force = 1; draw(); before = blits;
     fm1_ms = 50; draw(); assert(blits == before);
     fm1_ms = 70; draw(); assert(blits == before + 2u);
-    vis_style = 14; vis_select(1); assert(vis_style == 0u);
-    vis_select(-1); assert(vis_style == 14u);
+    vis_style = 15; vis_select(1); assert(vis_style == 0u);
+    vis_select(-1); assert(vis_style == 15u);
     vis_style = 0; vis_select(12); assert(vis_style == 12u);
-    vis_select(-29); assert(vis_style == 13u);
+    vis_select(-29); assert(vis_style == 15u);
+}
+static void t_life(void)
+{
+    uint32_t x, y, generation, seed = rng_state;
+    memset(&cosmic_life, 0, sizeof cosmic_life);
+    for (y = 10; y < 12; y++) for (x = 10; x < 12; x++) cosmic_life.cell[y][x] = 128u;
+    cosmic_life_step(); assert(cosmic_life.population == 4u);
+    for (y = 10; y < 12; y++) for (x = 10; x < 12; x++) assert(cosmic_life.cell[y][x] & 128u);
+    /* A fading dead neighbor must not participate in Conway's B3/S23 rule. */
+    memset(&cosmic_life, 0, sizeof cosmic_life);
+    cosmic_life.cell[9][10] = cosmic_life.cell[10][10] = cosmic_life.cell[11][10] = 128u;
+    cosmic_life.cell[9][9] = 127u;
+    cosmic_life_step(); assert(cosmic_life.population == 3u);
+    assert((cosmic_life.cell[10][9] & cosmic_life.cell[10][10] & cosmic_life.cell[10][11]) & 128u);
+    cosmic_life_step(); assert(cosmic_life.population == 3u);
+    assert((cosmic_life.cell[9][10] & cosmic_life.cell[10][10] & cosmic_life.cell[11][10]) & 128u);
+    /* The toroidal edge must behave exactly like an interior edge. */
+    memset(&cosmic_life, 0, sizeof cosmic_life);
+    cosmic_life.cell[31][0] = cosmic_life.cell[0][0] = cosmic_life.cell[1][0] = 128u;
+    cosmic_life_step(); assert(cosmic_life.population == 3u);
+    assert((cosmic_life.cell[0][31] & cosmic_life.cell[0][0] & cosmic_life.cell[0][1]) & 128u);
+    /* A/B/drum hits queued between UI frames survive until the next generation. */
+    for (uint32_t hit = 1u; hit <= 8u; hit <<= 1u) {
+        if (hit == 2u) continue;
+        memset(&cosmic_life, 0, sizeof cosmic_life);
+        cosmic_life.ready = 1; cosmic_life.ms = cosmic_life.fed_ms = 1000;
+        cosmic.heavy = 0; cosmic.energy = 0; cosmic.note_a = 48; cosmic.note_b = 72;
+        cosmic_life_update(1050, hit); assert(!cosmic_life.generation && cosmic_life.hits == hit);
+        cosmic_life_update(1100, 0); assert(cosmic_life.generation == 1u && !cosmic_life.hits);
+        uint32_t live = 0;
+        for (y = 0; y < 32; y++) for (x = 0; x < 32; x++) live += cosmic_life.cell[y][x] >> 7;
+        assert(live == 5u);
+    }
+    cosmic.heavy = 1; generation = cosmic_life.generation;
+    cosmic_life_update(1200, 0); assert(cosmic_life.generation == generation);
+    cosmic_life_update(1300, 0); assert(cosmic_life.generation == generation + 1u);
+    cosmic_life_update(1000000, 0); assert(cosmic_life.generation == generation + 2u);
+    cosmic_life.ms = UINT32_MAX - 50u; generation = cosmic_life.generation;
+    cosmic_life_update(149u, 0); assert(cosmic_life.generation == generation + 1u);
+    assert(rng_state == seed);
+    /* Even hard-panned B and drums drive energy, without needing a left-channel master peak. */
+    memset(&vs, 0, sizeof vs); memset(&cosmic, 0, sizeof cosmic);
+    vs.lvl[2] = 800; cosmic_update(1000, 4); assert(cosmic.energy == 800);
+    vs.lvl[3] = 1000; cosmic_update(1100, 8); assert(cosmic.energy == 1000);
 }
 static void t_geometry(void)
 {
     uint32_t style, pass, heavy, pitch, seed = rng_state;
-    for (style = 0; style < 3u; style++)
+    for (style = 0; style < 4u; style++)
         for (heavy = 0; heavy < 2u; heavy++)
             for (pitch = 0; pitch < 128u; pitch++) {
                 uint64_t first;
                 cosmic.ms = UINT32_MAX - pitch * 100u;
                 cosmic.note_a = (uint8_t)pitch; cosmic.note_b = (uint8_t)(127u - pitch);
                 cosmic.energy = cosmic.pulse = 1000; cosmic.heavy = (uint8_t)heavy;
+                if (style == 3u) { cosmic_life.ready = 0; cosmic_life_update(cosmic.ms, 13); }
+                uint32_t generation = cosmic_life.generation;
+                uint8_t life_before[sizeof cosmic_life];
+                memcpy(life_before, &cosmic_life, sizeof life_before);
                 for (pass = 0; pass < 2u; pass++) {
                     cv_begin(240, 120, C_BLACK); cv_oy = -(int32_t)(pass * 120u);
                     cosmic_draw(style);
@@ -102,6 +150,8 @@ static void t_geometry(void)
                     cosmic_draw(style); cv_oy = 0; cv_blit(0, pass * 120u);
                 }
                 assert(first == pixels());
+                assert(cosmic_life.generation == generation);
+                assert(!memcmp(life_before, &cosmic_life, sizeof life_before));
             }
     assert(rng_state == seed);
 }
@@ -118,7 +168,7 @@ static uint64_t audio_hash(int visuals)
                 scope_buf[scope_w & 511u] = vis_tap[i * 2u + 2u];
                 scope_bufr[scope_w++ & 511u] = vis_tap[i * 2u + 3u];
             }
-            fm1_ms += 100; ui.force = 1; vis_style = (uint8_t)(12u + block / 40u % 3u); draw();
+            fm1_ms += 100; ui.force = 1; vis_style = (uint8_t)(12u + block / 40u % 4u); draw();
         }
     }
     return h;
@@ -143,10 +193,11 @@ static void t_audio_unchanged(void)
 static void bench(void)
 {
     uint32_t style, frame, pass;
-    for (style = 0; style < 3u; style++) {
+    for (style = 0; style < 4u; style++) {
         uint64_t t0 = now_ns();
         for (frame = 0; frame < 100u; frame++) {
             cosmic.ms += 100; cosmic.heavy = 0;
+            if (style == 3u) cosmic_life_update(cosmic.ms, 5u);
             for (pass = 0; pass < 2u; pass++) {
                 cv_begin(240, 120, C_BLACK); cv_oy = -(int32_t)(pass * 120u);
                 cosmic_draw(style); cv_oy = 0; cv_blit(0, pass * 120u);
@@ -160,7 +211,7 @@ static void previews(const char *dir)
 {
     uint32_t style, frame, b, i;
     int32_t o[CTL * 2u];
-    for (style = 0; style < 3u; style++) {
+    for (style = 0; style < 4u; style++) {
         memset(trk, 0, sizeof trk); memset(&drums, 0, sizeof drums);
         memset(dly_buf, 0, sizeof dly_buf); memset(cho_buf, 0, sizeof cho_buf);
         memset(rev_line, 0, sizeof rev_line); memset(rev_ap, 0, sizeof rev_ap); memset(&fx, 0, sizeof fx);
@@ -170,6 +221,7 @@ static void previews(const char *dir)
             trk[i].p[P_AMODE] = trk[i].p[P_DIST] = trk[i].p[P_CHOR] = trk[i].p[P_DLY] = trk[i].p[P_REV] = 0;
         vis_hit = vis_kick_hit = 0;
         memset(&cosmic, 0, sizeof cosmic); memset(&vs, 0, sizeof vs);
+        memset(&cosmic_life, 0, sizeof cosmic_life);
         fm1_ms = 1000; vis_style = (uint8_t)(12u + style); vis_on = 1; vis_name_until = 0; ui.msg_t = 0;
         for (frame = 0; frame < 48u; frame++) {
             if (frame == 8u) trk_note_on(&trk[0], 48, 100);
@@ -191,8 +243,8 @@ static void previews(const char *dir)
 int main(int argc, char **argv)
 {
     palette_set(2); host_tracks_init();
-    t_schedule(); t_geometry(); t_audio_unchanged(); bench();
+    t_schedule(); t_life(); t_geometry(); t_audio_unchanged(); bench();
     if (argc > 1) previews(argv[1]);
-    puts("dino visuals: 15 styles, cadence/wrap, all pitches, bounded geometry, deterministic pixels, unchanged noise audio PASS");
+    puts("dino visuals: 16 styles, Conway rules/hits/trails, cadence/wrap, all pitches, bounded geometry, deterministic pixels, unchanged noise audio PASS");
     return 0;
 }

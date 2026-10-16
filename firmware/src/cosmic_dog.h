@@ -68,11 +68,14 @@ static uint32_t cosmic_lines, cosmic_points;
 static void cosmic_update(uint32_t now, uint32_t hit)
 {
     uint32_t dt = now - cosmic.ms;
-    int32_t fall;
+    int32_t fall, energy = vs.lvl[4];
     if (dt > 200u) dt = 200u;
     cosmic.ms = now;
     fall = (int32_t)dt * 3;
-    cosmic.energy = vs.lvl[4] > cosmic.energy ? vs.lvl[4] : clamp(cosmic.energy - fall, 0, 1000);
+    if (vs.lvl[0] > energy) energy = vs.lvl[0];
+    if (vs.lvl[2] > energy) energy = vs.lvl[2];
+    if (vs.lvl[3] > energy) energy = vs.lvl[3];
+    cosmic.energy = energy > cosmic.energy ? energy : clamp(cosmic.energy - fall, 0, 1000);
     cosmic.pulse = hit & 5u ? 1000 : clamp(cosmic.pulse - (int32_t)dt * 4, 0, 1000);
     cosmic.note_a = vis_note[0];
     cosmic.note_b = vis_note[2];
@@ -87,6 +90,94 @@ static uint32_t cosmic_hash(uint32_t x)
     x ^= x >> 15;
     x *= 0x846CA68Bu;
     return x ^ (x >> 16);
+}
+/* Live bit + fading color age, and one next-state bit per cell: no pixel framebuffer. */
+static struct {
+    uint8_t cell[32][32];
+    uint32_t next[32], ms, fed_ms, generation;
+    uint16_t population;
+    uint8_t ready, hits;
+} cosmic_life __attribute__((section(".pool")));
+_Static_assert(sizeof cosmic_life <= 1184u, "bounded Conway working memory");
+
+static void cosmic_life_step(void)
+{
+    uint32_t x, y;
+    memset(cosmic_life.next, 0, sizeof cosmic_life.next);
+    for (y = 0; y < 32u; y++) for (x = 0; x < 32u; x++) {
+        uint32_t left = (x + 31u) & 31u, right = (x + 1u) & 31u;
+        const uint8_t *above = cosmic_life.cell[(y + 31u) & 31u], *row = cosmic_life.cell[y],
+                      *below = cosmic_life.cell[(y + 1u) & 31u];
+        uint32_t n = (above[left] >> 7) + (above[x] >> 7) + (above[right] >> 7) +
+                     (row[left] >> 7) + (row[right] >> 7) +
+                     (below[left] >> 7) + (below[x] >> 7) + (below[right] >> 7);
+        if (n == 3u || (n == 2u && (row[x] & 128u))) cosmic_life.next[y] |= 1u << x;
+    }
+    cosmic_life.population = 0;
+    for (y = 0; y < 32u; y++) for (x = 0; x < 32u; x++) {
+        uint32_t age = cosmic_life.cell[y][x] & 127u;
+        if ((cosmic_life.next[y] >> x) & 1u) {
+            cosmic_life.cell[y][x] = (uint8_t)(128u | (age < 115u ? age + 12u : 127u));
+            cosmic_life.population++;
+        } else cosmic_life.cell[y][x] = (uint8_t)(age > 6u ? age - 6u : 0u);
+    }
+    cosmic_life.generation++;
+}
+static void cosmic_life_seed(uint32_t note, uint32_t part)
+{
+    static const uint8_t glider[5][2] = {{1,0},{2,1},{0,2},{1,2},{2,2}};
+    uint32_t h = cosmic_hash(note * 7919u + part * 104729u + cosmic_life.generation * 97u);
+    uint32_t x = (h & 7u) + (part == 0u ? 0u : part == 1u ? 24u : 12u), y = (h >> 5) & 31u, i;
+    for (i = 0; i < 5u; i++) {
+        uint32_t xx = (x + ((h & 256u) ? 2u - glider[i][0] : glider[i][0])) & 31u;
+        uint32_t yy = (y + ((h & 512u) ? 2u - glider[i][1] : glider[i][1])) & 31u;
+        cosmic_life.cell[yy][xx] = 128u | 96u;
+    }
+}
+static void cosmic_life_update(uint32_t now, uint32_t hit)
+{
+    uint32_t i;
+    if (!cosmic_life.ready) {
+        memset(&cosmic_life, 0, sizeof cosmic_life);
+        for (i = 0; i < 1024u; i++)
+            if ((cosmic_hash(i + 65537u) & 7u) < 2u) cosmic_life.cell[i >> 5][i & 31u] = 128u | 64u;
+        cosmic_life.ready = 1;
+        cosmic_life.ms = now - 200u;
+        cosmic_life.fed_ms = now;
+    }
+    cosmic_life.hits |= (uint8_t)(hit & 13u);
+    if (now - cosmic_life.ms < (cosmic.heavy ? 200u : 100u)) return;
+    cosmic_life.ms = now;                           /* A late UI frame never catches up in a long loop. */
+    cosmic_life_step();
+    if (cosmic_life.hits & 1u) cosmic_life_seed(cosmic.note_a, 0);
+    if (cosmic_life.hits & 4u) cosmic_life_seed(cosmic.note_b, 1);
+    if (cosmic_life.hits & 8u) cosmic_life_seed(vis_note[3], 2);
+    cosmic_life.hits = 0;
+    if (now - cosmic_life.fed_ms >= (uint32_t)(900 - cosmic.energy / 2)) {
+        if (cosmic.energy > 120 || cosmic_life.population < 48u)
+            cosmic_life_seed(cosmic.note_a + cosmic.note_b, cosmic_life.generation & 1u);
+        cosmic_life.fed_ms = now;
+    }
+}
+static void cosmic_life_draw(void)
+{
+    static const uint16_t neon[8] = {RGB(255,40,164), RGB(132,40,255), RGB(36,92,255), RGB(0,239,255),
+                                    RGB(28,255,136), RGB(206,255,30), RGB(255,147,24), RGB(255,36,87)};
+    uint32_t x, y, first = (uint32_t)(-cv_oy) * 32u / 240u, last = first + 16u;
+    for (y = first; y < last; y++) for (x = 0; x < 32u; x++) {
+        uint32_t cell = cosmic_life.cell[y][x], age = cell & 127u;
+        uint32_t hue = (cosmic.ms / 12u + x * 5u + y * 7u + age * 2u + (cosmic.note_a + cosmic.note_b) * 3u) & 255u;
+        int32_t xx = (int32_t)(x * 240u >> 5), yy = (int32_t)(y * 240u >> 5);
+        int32_t width = (int32_t)((x + 1u) * 240u >> 5) - xx, height = (int32_t)((y + 1u) * 240u >> 5) - yy;
+        uint16_t color;
+        if (!age) continue;
+        color = mix565(neon[hue >> 5], neon[((hue >> 5) + 1u) & 7u], (int32_t)(hue & 31u) * 8);
+        cv_rect(xx, yy, width, height, mix565(0, color, (int32_t)age * 88 / 127));
+        if (cell & 128u) {
+            cv_rect(xx + 1, yy + 1, width - 2, height - 2, mix565(0, color, 144 + cosmic.energy / 10));
+            if (!cosmic.heavy) cv_pset(xx + 2, yy + 2, mix565(color, C_WHITE, cosmic.pulse / 8));
+        }
+    }
 }
 static void cosmic_line(int32_t x, int32_t y, int32_t xx, int32_t yy, uint16_t color)
 {
@@ -215,7 +306,7 @@ static void cosmic_draw(uint32_t style)
                 cosmic_line(x[parent], y[parent], x[j], y[j], mix565(color, RGB(235, 233, 255), (int32_t)depth * 48));
             }
         }
-    } else {
+    } else if (style == 2u) {
         uint32_t count = cosmic.heavy ? 96u : 192u;
         for (i = 0; i < count; i++) {
             uint32_t h = cosmic_hash(i + 104729u), a = (h & 1023u) + phase + i * (cosmic.note_b % 5u + 1u);
@@ -239,5 +330,6 @@ static void cosmic_draw(uint32_t style)
             }
         }
     }
+    if (style == 3u) cosmic_life_draw();
     cosmic_dog();
 }

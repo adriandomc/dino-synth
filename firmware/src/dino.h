@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 #pragma once
-#define DINO_VIS_N 15u
+#define DINO_VIS_N 16u
 #define DINO_A 0u
 #define DINO_B 2u
 enum { DINO_SINGLE, DINO_LAYER, DINO_SPLIT, DINO_DRUMS };

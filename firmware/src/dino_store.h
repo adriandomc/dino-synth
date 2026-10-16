@@ -22,6 +22,7 @@ typedef struct {
     uint32_t sum;
 } dino_performance_t;
 _Static_assert(sizeof(dino_performance_t) <= 3840u, "DINO performance fits an existing project object");
+_Static_assert(__builtin_offsetof(dino_performance_t, style) == 33u, "Editor backup preflight reads the visual style at byte 33");
 static uint32_t dino_store_hash(const void *data, uint32_t n)
 {
     const uint8_t *p = data;
@@ -38,7 +39,7 @@ static int dino_store_valid(const dino_performance_t *p, uint32_t n, uint32_t ma
     uint32_t i, j;
     if (n != sizeof *p || p->magic != magic || p->size != sizeof *p || p->version != DINO_STORE_VERSION ||
         p->np != P_COUNT || p->ng != G_COUNT || p->mode > 3u || p->focus > 1u || p->split > 127u ||
-        p->octave < -3 || p->octave > 3 || p->style >= 15u || !p->name[0] || p->name[12] ||
+        p->octave < -3 || p->octave > 3 || p->style >= DINO_VIS_N || !p->name[0] || p->name[12] ||
         p->sum != dino_store_hash(p, __builtin_offsetof(dino_performance_t, sum)))
         return 0;
     for (i = 0; i < 12u && p->name[i]; i++)
