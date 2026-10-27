@@ -3,7 +3,7 @@
 /* SLOOP (based on FELUCCA): one compilation unit (the HAL is header-only). Order matters. */
 #define FELUCCA_COSMIC 1
 #ifndef FELUCCA_VERSION
-#define FELUCCA_VERSION "SLOOP 2.7+DINO"
+#define FELUCCA_VERSION "SLOOP 2.8.1+DINO"
 #endif
 #include <stdint.h>
 #include "fm1_time.h"

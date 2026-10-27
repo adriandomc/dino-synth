@@ -26,7 +26,7 @@ class DistributionTest(unittest.TestCase):
         (self.root / "assets/dino").mkdir(parents=True)
         for name in pack.PREVIEWS:
             shutil.copyfile(ROOT / "assets/dino" / name, self.root / "assets/dino" / name)
-        (self.root / "build/felucca.bin").write_bytes(b"SLOOP 2.7+DINO")
+        (self.root / "build/felucca.bin").write_bytes(b"SLOOP 2.8.1+DINO")
         raw = bytearray(4096)
         for i, ch in enumerate("FM-1_900"):
             raw[i * pack.make_site.BLK + pack.make_site.KEEP] = ord(ch) + i + 1
@@ -44,26 +44,31 @@ class DistributionTest(unittest.TestCase):
     def test_original_editor_and_fork_installer_link(self):
         with patch.object(pack.subprocess, "check_output", side_effect=["a" * 40 + "\n", ""]):
             pack.main()
-        out = self.root / "build/sloop-2.7-dinoperro"
+        out = self.root / "build/sloop-2.8.1-dinoperro"
         src = (ROOT / "web/editor.html").read_text(encoding="utf-8")
         editor = (out / "webapp/editor/index.html").read_text(encoding="utf-8")
         self.assertEqual(editor, src.replace('download="sloop-editor.html"',
-                                             'download="sloop-editor-2.7-dinoperro.html"'))
+                                             'download="sloop-editor-2.8.1-dinoperro.html"'))
         offline = (out / "webapp/editor/sloop-editor.html").read_text(encoding="utf-8")
         self.assertIn(pack.INSTALL_GUIDE, offline)
         self.assertNotIn(pack.make_site.ONLINE + "webapp/installer/", offline)
-        self.assertIn('"version": "2.7-dinoperro"',
+        self.assertIn('"version": "2.8.1-dinoperro"',
                       (out / "webapp/installer/index.html").read_text(encoding="utf-8"))
         manifest = json.loads((out / "manifest.json").read_text(encoding="utf-8"))
         self.assertFalse(manifest["source_modified"])
-        self.assertIn("firmware/sloop-2.7-dinoperro.fwsc", manifest["sha256"])
+        self.assertEqual(manifest["version"], "2.8.1-dinoperro")
+        self.assertEqual(manifest["upstream"],
+                         "isod89/sloop-fm1 v2.8.1 d89364253b79a5c6002c0d90c5f16b3c3c16ea9d")
+        self.assertIn("firmware/sloop-2.8.1-dinoperro.fwsc", manifest["sha256"])
         with zipfile.ZipFile(str(out) + ".zip") as archive:
             self.assertIsNone(archive.testzip())
 
-    def test_dino_synth_binary_rejected(self):
-        (self.root / "build/felucca.bin").write_bytes(b"DINO SYNTH 0.2")
-        with self.assertRaisesRegex(SystemExit, "Build SLOOP"):
-            pack.main()
+    def test_old_firmware_binary_rejected(self):
+        for binary in (b"DINO SYNTH 0.2", b"SLOOP 2.7+DINO"):
+            with self.subTest(binary=binary):
+                (self.root / "build/felucca.bin").write_bytes(binary)
+                with self.assertRaisesRegex(SystemExit, "Build SLOOP 2.8.1"):
+                    pack.main()
 
     def test_newer_source_rejected(self):
         (self.root / "firmware").mkdir()

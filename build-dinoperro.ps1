@@ -9,10 +9,10 @@ $ErrorActionPreference = "Stop"
 Push-Location $PSScriptRoot
 try {
     & wsl.exe -d $Distro -u root -- sh tools/build_dinoperro.sh
-    if ($LASTEXITCODE -ne 0) { throw "Falló la compilación de SLOOP 2.7 + Dinoperro." }
+    if ($LASTEXITCODE -ne 0) { throw "Falló la compilación de SLOOP 2.8.1 + Dinoperro." }
     if ($Test) {
         & wsl.exe -d $Distro -u root -- sh tests/run_dinoperro_tests.sh
-        if ($LASTEXITCODE -ne 0) { throw "Fallaron las pruebas de SLOOP 2.7 + Dinoperro." }
+        if ($LASTEXITCODE -ne 0) { throw "Fallaron las pruebas de SLOOP 2.8.1 + Dinoperro." }
     }
     Write-Output "Firmware: $PSScriptRoot/build/felucca.fwsc"
 } finally {

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
-"""Package SLOOP 2.7 with four Dinoperro visualisers and the original editor."""
+"""Package SLOOP 2.8.1 with four Dinoperro visualisers and the original editor."""
 import hashlib
 import json
 from pathlib import Path
@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "web"))
 import make_site
 
-VERSION = "2.7-dinoperro"
+VERSION = "2.8.1-dinoperro"
 DOCUMENTS = ("README.md", "SLOOP-DINOPERRO.md", "BUILDING.md", "GUIDE.md",
              "SLOOP-README.md", "LICENSE", "LICENSING.md")
 PREVIEWS = ("cosmic-preview.png", "cosmic-animation.gif", "conway-preview.png", "conway-animation.gif")
@@ -23,8 +23,8 @@ INSTALL_GUIDE = "https://github.com/adriandomc/dino-synth/blob/dino-synth/SLOOP-
 def main():
     package = ROOT / "build/felucca.fwsc"
     app = ROOT / "build/felucca.bin"
-    if not app.is_file() or b"SLOOP 2.7+DINO" not in app.read_bytes() or b"DINO SYNTH" in app.read_bytes():
-        raise SystemExit("Build SLOOP 2.7+DINO before packaging.")
+    if not app.is_file() or b"SLOOP 2.8.1+DINO" not in app.read_bytes() or b"DINO SYNTH" in app.read_bytes():
+        raise SystemExit("Build SLOOP 2.8.1+DINO before packaging.")
     if not package.is_file() or package.stat().st_mtime < app.stat().st_mtime:
         raise SystemExit("The firmware package is missing or older than the app; rebuild first.")
     sources = list((ROOT / "firmware").rglob("*.c")) + list((ROOT / "firmware").rglob("*.h"))
@@ -57,7 +57,7 @@ def main():
         "version": VERSION,
         "source_commit": commit,
         "source_modified": dirty,
-        "upstream": "isod89/sloop-fm1 v2.7 ba54ba5f0e7f6e0a1a3499497809e1e6c1ad7e8c",
+        "upstream": "isod89/sloop-fm1 v2.8.1 d89364253b79a5c6002c0d90c5f16b3c3c16ea9d",
         "sha256": {path.relative_to(out).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
                    for path in sorted(out.rglob("*")) if path.is_file() and path.name != "manifest.json"},
     }

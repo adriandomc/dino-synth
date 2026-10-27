@@ -41,7 +41,7 @@ CORES=1 "$OUT/mix_split_test"
 CORES=2 CHAOS=7 "$OUT/mix_split_test"
 CORES=2 CPU1_TIMEOUT_AT=700 "$OUT/mix_split_test"
 
-if [ -f build/upstream-baseline/build/felucca.dis ]; then
+if [ -f build/upstream-v2.8.1/build/felucca.dis ]; then
     python3 - <<'PY'
 import runpy
 budget = runpy.run_path("tests/target_budget.py")
@@ -49,12 +49,12 @@ def costs(path):
     result = {name: budget["cost"](code) for name, code in budget["functions"](path).items()}
     assert len(result) == len(budget["FUNCS"]), f"Missing target functions in {path}"
     return result
-assert costs("build/felucca.dis") == costs("build/upstream-baseline/build/felucca.dis"), "Target audio code differs from the pinned SLOOP 2.7 build"
-print("Target audio costs match the pinned SLOOP 2.7 build exactly (18 functions).")
+assert costs("build/felucca.dis") == costs("build/upstream-v2.8.1/build/felucca.dis"), "Target audio code differs from the pinned SLOOP 2.8.1 build"
+print("Target audio costs match the pinned SLOOP 2.8.1 build exactly (18 functions).")
 PY
 else
-    echo 'Target audio comparison skipped: build/upstream-baseline/build/felucca.dis is absent.'
+    echo 'Target audio comparison skipped: build/upstream-v2.8.1/build/felucca.dis is absent.'
 fi
 python3 tools/render_dino_visuals.py build/dinoperro-visuals
 python3 tests/package_dinoperro_test.py
-echo 'SLOOP 2.7 + Dinoperro host checks passed. Target budgets and physical timing/audio are separate checks.'
+echo 'SLOOP 2.8.1 + Dinoperro host checks passed. Target budgets and physical timing/audio are separate checks.'
