@@ -1,6 +1,6 @@
 #!/bin/sh
 # SPDX-License-Identifier: GPL-3.0-only
-# Pinned SLOOP 2.8.1 + Dinoperro build; this script never installs firmware.
+# Pinned SLOOP 2.8.3 + Dinoperro build; this script never installs firmware.
 set -eu
 cd "$(dirname "$0")/.."
 export JIELI_TOOLCHAIN=/root/.jieli/jieli-linux-toolchains-20260730.1

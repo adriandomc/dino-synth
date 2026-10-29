@@ -1,8 +1,8 @@
-# SLOOP 2.8.1 + Dinoperro para FM-1
+# SLOOP 2.8.3 + Dinoperro para FM-1
 
-[SLOOP v2.8.1](https://github.com/isod89/sloop-fm1/releases/tag/v2.8.1), commit `d89364253b79a5c6002c0d90c5f16b3c3c16ea9d`, con cuatro visualizadores adicionales del dinoperro cósmico.
+[SLOOP v2.8.3](https://github.com/isod89/sloop-fm1/releases/tag/v2.8.3), commit `5eb24c1dc18261a85c193e8b28318944690e58fd`, con cuatro visualizadores adicionales del dinoperro cósmico.
 
-Conserva el funcionamiento original de SLOOP 2.8.1: sus doce motores, cuatro pistas, secuenciador, grabación, canciones, arpegiador, efectos, controles, presets y editor web. HOME, SEL, SAVE, REC y los knobs conservan sus funciones de SLOOP.
+Conserva el funcionamiento original de SLOOP 2.8.3: sus doce motores, cuatro pistas, secuenciador, grabación, canciones, arpegiador, efectos, controles, presets y editor web. HOME, SEL, SAVE, REC y los knobs conservan sus funciones de SLOOP.
 
 Los doce visualizadores originales permanecen. Se añaden:
 
@@ -15,7 +15,7 @@ Los doce visualizadores originales permanecen. Se añaden:
 
 Desde TRACKS, pulsa **HOME** para abrir el visualizador y gira **SELECT** para elegir estilo. HOME vuelve a TRACKS. El último estilo se conserva como en SLOOP.
 
-[Guía de esta versión](SLOOP-DINOPERRO.md) · [Manual original de SLOOP](GUIDE.md) · [Firmware](docs/firmware/sloop-2.8.1-dinoperro.fwsc) · [Editor original offline](docs/webapp/editor/sloop-editor.html)
+[Guía de esta versión](SLOOP-DINOPERRO.md) · [Manual original de SLOOP](GUIDE.md) · [Firmware](docs/firmware/sloop-2.8.3-dinoperro.fwsc) · [Editor original offline](docs/webapp/editor/sloop-editor.html)
 
 ![Dinoperro con COSMIC DOG, HALO y NEBULA](assets/dino/cosmic-preview.png)
 
@@ -29,7 +29,7 @@ Prepara Ubuntu en WSL2, el toolchain JieLi y los tres archivos del SDK indicados
 .\build-dinoperro.ps1 -Test
 ```
 
-El firmware queda en `build/felucca.fwsc`. `python tools/package_dinoperro.py` reúne el firmware, el instalador, el editor original, las previews y las guías en `build/sloop-2.8.1-dinoperro.zip`.
+El firmware queda en `build/felucca.fwsc`. `python tools/package_dinoperro.py` reúne el firmware, el instalador, el editor original, las previews y las guías en `build/sloop-2.8.3-dinoperro.zip`.
 
 Las capturas proceden del renderer del firmware. Las pruebas de host no sustituyen la comprobación de audio y rendimiento en el FM-1 físico.
 
